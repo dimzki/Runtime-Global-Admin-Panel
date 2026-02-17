@@ -95,32 +95,77 @@ namespace Alzaki.GlobalSettings
         // CONVENIENCE METHODS
         // ═════════════════════════════════════════════════════════════════════════════
 
-        public static int GetInt(string key, int defaultValue = 0) => Settings?.GetInt(key, defaultValue) ?? defaultValue;
-        public static void SetInt(string key, int value) => Settings?.SetInt(key, value);
+        public static int GetInt(string key, int defaultValue = 0)
+        {
+            if (Settings != null && !Settings.HasInt(key))
+                Debug.LogError($"[GlobalSettingsManager] Key '{key}' not found in Int settings.");
+            return Settings != null ? Settings.GetInt(key, defaultValue) : defaultValue;
+        }
+        public static void SetInt(string key, int value) { if (Settings != null) Settings.SetInt(key, value); }
 
-        public static float GetFloat(string key, float defaultValue = 0f) => Settings?.GetFloat(key, defaultValue) ?? defaultValue;
-        public static void SetFloat(string key, float value) => Settings?.SetFloat(key, value);
+        public static float GetFloat(string key, float defaultValue = 0f)
+        {
+            if (Settings != null && !Settings.HasFloat(key))
+                Debug.LogError($"[GlobalSettingsManager] Key '{key}' not found in Float settings.");
+            return Settings != null ? Settings.GetFloat(key, defaultValue) : defaultValue;
+        }
+        public static void SetFloat(string key, float value) { if (Settings != null) Settings.SetFloat(key, value); }
 
-        public static string GetString(string key, string defaultValue = "") => Settings?.GetString(key, defaultValue) ?? defaultValue;
-        public static void SetString(string key, string value) => Settings?.SetString(key, value);
+        public static string GetString(string key, string defaultValue = "")
+        {
+            if (Settings != null && !Settings.HasString(key))
+                Debug.LogError($"[GlobalSettingsManager] Key '{key}' not found in String settings.");
+            return Settings != null ? Settings.GetString(key, defaultValue) : defaultValue;
+        }
+        public static void SetString(string key, string value) { if (Settings != null) Settings.SetString(key, value); }
 
-        public static bool GetBool(string key, bool defaultValue = false) => Settings?.GetBool(key, defaultValue) ?? defaultValue;
-        public static void SetBool(string key, bool value) => Settings?.SetBool(key, value);
+        public static bool GetBool(string key, bool defaultValue = false)
+        {
+            if (Settings != null && !Settings.HasBool(key))
+                Debug.LogError($"[GlobalSettingsManager] Key '{key}' not found in Bool settings.");
+            return Settings != null ? Settings.GetBool(key, defaultValue) : defaultValue;
+        }
+        public static void SetBool(string key, bool value) { if (Settings != null) Settings.SetBool(key, value); }
 
-        public static Color GetColor(string key, Color? defaultValue = null) => Settings?.GetColor(key, defaultValue) ?? Color.white;
-        public static void SetColor(string key, Color value) => Settings?.SetColor(key, value);
+        public static Color GetColor(string key, Color? defaultValue = null)
+        {
+            if (Settings != null && !Settings.HasColor(key))
+                Debug.LogError($"[GlobalSettingsManager] Key '{key}' not found in Color settings.");
+            return Settings != null ? Settings.GetColor(key, defaultValue) : (defaultValue ?? Color.white);
+        }
+        public static void SetColor(string key, Color value) { if (Settings != null) Settings.SetColor(key, value); }
 
-        public static Vector2 GetVector2(string key, Vector2 defaultValue = default) => Settings?.GetVector2(key, defaultValue) ?? defaultValue;
-        public static void SetVector2(string key, Vector2 value) => Settings?.SetVector2(key, value);
+        public static Vector2 GetVector2(string key, Vector2 defaultValue = default)
+        {
+            if (Settings != null && !Settings.HasVector2(key))
+                Debug.LogError($"[GlobalSettingsManager] Key '{key}' not found in Vector2 settings.");
+            return Settings != null ? Settings.GetVector2(key, defaultValue) : defaultValue;
+        }
+        public static void SetVector2(string key, Vector2 value) { if (Settings != null) Settings.SetVector2(key, value); }
 
-        public static Vector3 GetVector3(string key, Vector3 defaultValue = default) => Settings?.GetVector3(key, defaultValue) ?? defaultValue;
-        public static void SetVector3(string key, Vector3 value) => Settings?.SetVector3(key, value);
+        public static Vector3 GetVector3(string key, Vector3 defaultValue = default)
+        {
+            if (Settings != null && !Settings.HasVector3(key))
+                Debug.LogError($"[GlobalSettingsManager] Key '{key}' not found in Vector3 settings.");
+            return Settings != null ? Settings.GetVector3(key, defaultValue) : defaultValue;
+        }
+        public static void SetVector3(string key, Vector3 value) { if (Settings != null) Settings.SetVector3(key, value); }
 
-        public static AnimationCurve GetCurve(string key, AnimationCurve defaultValue = null) => Settings?.GetCurve(key, defaultValue) ?? AnimationCurve.Linear(0, 0, 1, 1);
-        public static void SetCurve(string key, AnimationCurve value) => Settings?.SetCurve(key, value);
+        public static AnimationCurve GetCurve(string key, AnimationCurve defaultValue = null)
+        {
+            if (Settings != null && !Settings.HasCurve(key))
+                Debug.LogError($"[GlobalSettingsManager] Key '{key}' not found in Curve settings.");
+            return Settings != null ? Settings.GetCurve(key, defaultValue) : (defaultValue ?? AnimationCurve.Linear(0, 0, 1, 1));
+        }
+        public static void SetCurve(string key, AnimationCurve value) { if (Settings != null) Settings.SetCurve(key, value); }
 
-        public static T GetEnum<T>(string key, T defaultValue = default) where T : System.Enum => Settings != null ? Settings.GetEnum(key, defaultValue) : defaultValue;
-        public static void SetEnum<T>(string key, T value) where T : System.Enum => Settings?.SetEnum(key, value);
+        public static T GetEnum<T>(string key, T defaultValue = default) where T : Enum
+        {
+            if (Settings != null && !Settings.HasEnum(key))
+                Debug.LogError($"[GlobalSettingsManager] Key '{key}' not found in Enum settings.");
+            return Settings != null ? Settings.GetEnum(key, defaultValue) : defaultValue;
+        }
+        public static void SetEnum<T>(string key, T value) where T : Enum { if (Settings != null) Settings.SetEnum(key, value); }
 
         // ═════════════════════════════════════════════════════════════════════════════
         // RUNTIME UI PANEL
