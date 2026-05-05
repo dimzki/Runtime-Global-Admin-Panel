@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 #if TMP_PRESENT
 using TMPro;
+using InputField = TMPro.TMP_InputField;
 #endif
 
 namespace Alzaki.GlobalSettings
@@ -101,46 +102,72 @@ namespace Alzaki.GlobalSettings
 #endif
         }
 
-        private bool CheckNewInputSystem()
+        private Type _keyboardType;
+        private PropertyInfo _currentKeyboardProperty;
+        private PropertyInfo _keyProperty;
+        private PropertyInfo _wasPressedProperty;
+        private bool _inputSystemInitialized = false;
+
+        private void InitializeInputSystemReflection()
         {
+            _inputSystemInitialized = true;
             try
             {
-                var inputSystemAssembly = System.AppDomain.CurrentDomain.GetAssemblies();
-                foreach (var assembly in inputSystemAssembly)
+                var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+                foreach (var assembly in assemblies)
                 {
                     if (assembly.GetName().Name == "Unity.InputSystem")
                     {
-                        var keyboardType = assembly.GetType("UnityEngine.InputSystem.Keyboard");
-                        if (keyboardType == null) return false;
+                        _keyboardType = assembly.GetType("UnityEngine.InputSystem.Keyboard");
+                        if (_keyboardType == null) return;
 
-                        var currentProperty = keyboardType.GetProperty("current", BindingFlags.Public | BindingFlags.Static);
-                        if (currentProperty == null) return false;
-
-                        var keyboard = currentProperty.GetValue(null);
-                        if (keyboard == null) return false;
+                        _currentKeyboardProperty = _keyboardType.GetProperty("current", BindingFlags.Public | BindingFlags.Static);
+                        if (_currentKeyboardProperty == null) return;
 
                         string keyName = GetInputSystemKeyName(toggleKey);
-                        if (string.IsNullOrEmpty(keyName)) return false;
+                        if (string.IsNullOrEmpty(keyName)) return;
 
-                        var keyProperty = keyboardType.GetProperty(keyName, BindingFlags.Public | BindingFlags.Instance);
-                        if (keyProperty == null) return false;
-
-                        var key = keyProperty.GetValue(keyboard);
-                        if (key == null) return false;
-
-                        var wasPressedProperty = key.GetType().GetProperty("wasPressedThisFrame", BindingFlags.Public | BindingFlags.Instance);
-                        if (wasPressedProperty == null) return false;
-
-                        return (bool)wasPressedProperty.GetValue(key);
+                        _keyProperty = _keyboardType.GetProperty(keyName, BindingFlags.Public | BindingFlags.Instance);
+                        return;
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[GlobalSettingsRuntimePanel] Input check failed: {ex.Message}");
+                Debug.LogWarning("[GlobalSettingsRuntimePanel] Input check init failed: " + ex.Message);
+            }
+        }
+
+        private bool CheckNewInputSystem()
+        {
+            if (!_inputSystemInitialized)
+            {
+                InitializeInputSystemReflection();
             }
 
-            return false;
+            if (_currentKeyboardProperty == null || _keyProperty == null) return false;
+
+            try
+            {
+                var keyboard = _currentKeyboardProperty.GetValue(null);
+                if (keyboard == null) return false;
+
+                var key = _keyProperty.GetValue(keyboard);
+                if (key == null) return false;
+
+                if (_wasPressedProperty == null)
+                {
+                    _wasPressedProperty = key.GetType().GetProperty("wasPressedThisFrame", BindingFlags.Public | BindingFlags.Instance);
+                }
+
+                if (_wasPressedProperty == null) return false;
+
+                return (bool)_wasPressedProperty.GetValue(key);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private string GetInputSystemKeyName(KeyCode keyCode)
@@ -370,181 +397,199 @@ namespace Alzaki.GlobalSettings
                 return;
             }
 
+            Type settingsType = _originalSettings.GetType();
             int totalFieldsAdded = 0;
 
-            foreach (var category in _originalSettings.Categories)
+            // Get int settings (now a List<IntSetting>)
+            var intField = settingsType.GetField("intSettings", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (intField != null)
             {
-                if (category == null) continue;
+                var intList = intField.GetValue(_originalSettings) as List<IntSetting>;
+                if (intList != null && intList.Count > 0)
+                {
+                    CreateSectionHeader(content, "Integer Settings");
+                    foreach (var s in intList)
+                    {
+                        if (!string.IsNullOrEmpty(s.key))
+                        {
+                            CreateIntField(content, s.key, s.value);
+                            totalFieldsAdded++;
+                        }
+                    }
+                }
+            }
 
-                int categoryCount = category.intSettings.Count + category.floatSettings.Count +
-                                    category.stringSettings.Count + category.boolSettings.Count +
-                                    category.colorSettings.Count + category.vector2Settings.Count +
-                                    category.vector3Settings.Count + category.curveSettings.Count +
-                                    category.enumSettings.Count;
+            // Get float settings
+            var floatField = settingsType.GetField("floatSettings", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (floatField != null)
+            {
+                var floatList = floatField.GetValue(_originalSettings) as List<FloatSetting>;
+                if (floatList != null && floatList.Count > 0)
+                {
+                    CreateSectionHeader(content, "Float Settings");
+                    foreach (var s in floatList)
+                    {
+                        if (!string.IsNullOrEmpty(s.key))
+                        {
+                            CreateFloatField(content, s.key, s.value);
+                            totalFieldsAdded++;
+                        }
+                    }
+                }
+            }
 
-                if (categoryCount == 0) continue;
+            // Get string settings
+            var stringField = settingsType.GetField("stringSettings", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (stringField != null)
+            {
+                var stringList = stringField.GetValue(_originalSettings) as List<StringSetting>;
+                if (stringList != null && stringList.Count > 0)
+                {
+                    CreateSectionHeader(content, "String Settings");
+                    foreach (var s in stringList)
+                    {
+                        if (!string.IsNullOrEmpty(s.key))
+                        {
+                            CreateStringField(content, s.key, s.value);
+                            totalFieldsAdded++;
+                        }
+                    }
+                }
+            }
 
-                Transform categoryContent = CreateCategorySection(content, category.categoryName);
+            // Get bool settings
+            var boolField = settingsType.GetField("boolSettings", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (boolField != null)
+            {
+                var boolList = boolField.GetValue(_originalSettings) as List<BoolSetting>;
+                if (boolList != null && boolList.Count > 0)
+                {
+                    CreateSectionHeader(content, "Bool Settings");
+                    foreach (var s in boolList)
+                    {
+                        if (!string.IsNullOrEmpty(s.key))
+                        {
+                            CreateBoolField(content, s.key, s.value);
+                            totalFieldsAdded++;
+                        }
+                    }
+                }
+            }
 
-                foreach (var s in category.intSettings)
-                    if (!string.IsNullOrEmpty(s.key)) { CreateIntField(categoryContent, s.key, s.value); totalFieldsAdded++; }
+            // Get color settings
+            var colorField = settingsType.GetField("colorSettings", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (colorField != null)
+            {
+                var colorList = colorField.GetValue(_originalSettings) as List<ColorSetting>;
+                if (colorList != null && colorList.Count > 0)
+                {
+                    CreateSectionHeader(content, "Color Settings");
+                    foreach (var s in colorList)
+                    {
+                        if (!string.IsNullOrEmpty(s.key))
+                        {
+                            CreateColorField(content, s.key, s.value);
+                            totalFieldsAdded++;
+                        }
+                    }
+                }
+            }
 
-                foreach (var s in category.floatSettings)
-                    if (!string.IsNullOrEmpty(s.key)) { CreateFloatField(categoryContent, s.key, s.value); totalFieldsAdded++; }
+            // Get Vector2 settings
+            var vector2Field = settingsType.GetField("vector2Settings", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (vector2Field != null)
+            {
+                var vector2List = vector2Field.GetValue(_originalSettings) as List<Vector2Setting>;
+                if (vector2List != null && vector2List.Count > 0)
+                {
+                    CreateSectionHeader(content, "Vector2 Settings");
+                    foreach (var s in vector2List)
+                    {
+                        if (!string.IsNullOrEmpty(s.key))
+                        {
+                            CreateVector2Field(content, s.key, s.value);
+                            totalFieldsAdded++;
+                        }
+                    }
+                }
+            }
 
-                foreach (var s in category.stringSettings)
-                    if (!string.IsNullOrEmpty(s.key)) { CreateStringField(categoryContent, s.key, s.value); totalFieldsAdded++; }
+            // Get Vector3 settings
+            var vector3Field = settingsType.GetField("vector3Settings", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (vector3Field != null)
+            {
+                var vector3List = vector3Field.GetValue(_originalSettings) as List<Vector3Setting>;
+                if (vector3List != null && vector3List.Count > 0)
+                {
+                    CreateSectionHeader(content, "Vector3 Settings");
+                    foreach (var s in vector3List)
+                    {
+                        if (!string.IsNullOrEmpty(s.key))
+                        {
+                            CreateVector3Field(content, s.key, s.value);
+                            totalFieldsAdded++;
+                        }
+                    }
+                }
+            }
 
-                foreach (var s in category.boolSettings)
-                    if (!string.IsNullOrEmpty(s.key)) { CreateBoolField(categoryContent, s.key, s.value); totalFieldsAdded++; }
-
-                foreach (var s in category.colorSettings)
-                    if (!string.IsNullOrEmpty(s.key)) { CreateColorField(categoryContent, s.key, s.value); totalFieldsAdded++; }
-
-                foreach (var s in category.vector2Settings)
-                    if (!string.IsNullOrEmpty(s.key)) { CreateVector2Field(categoryContent, s.key, s.value); totalFieldsAdded++; }
-
-                foreach (var s in category.vector3Settings)
-                    if (!string.IsNullOrEmpty(s.key)) { CreateVector3Field(categoryContent, s.key, s.value); totalFieldsAdded++; }
-
-                foreach (var s in category.enumSettings)
-                    if (!string.IsNullOrEmpty(s.key)) { CreateEnumField(categoryContent, s); totalFieldsAdded++; }
+            // Get Enum settings
+            var enumField = settingsType.GetField("enumSettings", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (enumField != null)
+            {
+                var enumList = enumField.GetValue(_originalSettings) as List<EnumSetting>;
+                if (enumList != null && enumList.Count > 0)
+                {
+                    CreateSectionHeader(content, "Enum Settings");
+                    foreach (var s in enumList)
+                    {
+                        if (!string.IsNullOrEmpty(s.key))
+                        {
+                            CreateEnumField(content, s);
+                            totalFieldsAdded++;
+                        }
+                    }
+                }
             }
 
             if (totalFieldsAdded == 0)
             {
-                CreateLabelInContent(content, "No settings found! Add categories and settings to GlobalSettings asset.");
+                CreateLabelInContent(content, "No settings found! Add settings to GlobalSettings asset.");
             }
-        }
-
-        /// <summary>
-        /// Creates a foldable category section. Returns the inner content Transform
-        /// where settings rows should be placed.
-        /// </summary>
-        private Transform CreateCategorySection(Transform parent, string categoryName)
-        {
-            // Outer container
-            GameObject sectionObj = new GameObject("Section_" + categoryName, typeof(RectTransform));
-            sectionObj.transform.SetParent(parent, false);
-
-            VerticalLayoutGroup sectionVlg = sectionObj.AddComponent<VerticalLayoutGroup>();
-            sectionVlg.childControlHeight = false;
-            sectionVlg.childControlWidth = true;
-            sectionVlg.childForceExpandHeight = false;
-            sectionVlg.childForceExpandWidth = true;
-            sectionVlg.spacing = 4;
-
-            ContentSizeFitter sectionCsf = sectionObj.AddComponent<ContentSizeFitter>();
-            sectionCsf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            LayoutElement sectionLe = sectionObj.AddComponent<LayoutElement>();
-            sectionLe.flexibleWidth = 1;
-
-            // ── Header button ──────────────────────────────────────────────────
-            GameObject headerObj = new GameObject("Header_" + categoryName, typeof(RectTransform));
-            headerObj.transform.SetParent(sectionObj.transform, false);
-
-            RectTransform headerRt = (RectTransform)headerObj.transform;
-            headerRt.sizeDelta = new Vector2(0, 48);
-
-            Image headerBg = headerObj.AddComponent<Image>();
-            headerBg.color = new Color(0.12f, 0.14f, 0.22f, 1f);
-
-            Button headerBtn = headerObj.AddComponent<Button>();
-            headerBtn.targetGraphic = headerBg;
-
-            ColorBlock colors = headerBtn.colors;
-            colors.highlightedColor = new Color(0.18f, 0.22f, 0.35f, 1f);
-            colors.pressedColor     = new Color(0.10f, 0.12f, 0.18f, 1f);
-            headerBtn.colors = colors;
-
-            LayoutElement headerLe = headerObj.AddComponent<LayoutElement>();
-            headerLe.minHeight = 48;
-
-            // Label inside header
-            GameObject labelObj = new GameObject("Label", typeof(RectTransform));
-            labelObj.transform.SetParent(headerObj.transform, false);
-
-            RectTransform labelRt = (RectTransform)labelObj.transform;
-            labelRt.anchorMin = Vector2.zero;
-            labelRt.anchorMax = Vector2.one;
-            labelRt.offsetMin = new Vector2(15, 0);
-            labelRt.offsetMax = Vector2.zero;
-
-#if TMP_PRESENT
-            TextMeshProUGUI labelText = labelObj.AddComponent<TextMeshProUGUI>();
-            labelText.text = "▼  " + categoryName;
-            labelText.fontSize = 22;
-            labelText.fontStyle = FontStyles.Bold;
-            labelText.color = new Color(0.95f, 0.75f, 0.25f, 1f);
-            labelText.alignment = TextAlignmentOptions.MidlineLeft;
-            if (_calibriTMPFont != null)
-                labelText.font = _calibriTMPFont;
-#else
-            Text labelText = labelObj.AddComponent<Text>();
-            labelText.text = "▼  " + categoryName;
-            labelText.fontSize = 22;
-            labelText.fontStyle = FontStyle.Bold;
-            labelText.color = new Color(0.95f, 0.75f, 0.25f, 1f);
-            labelText.alignment = TextAnchor.MiddleLeft;
-            labelText.font = _calibriFont;
-#endif
-
-            // ── Content container ──────────────────────────────────────────────
-            GameObject contentObj = new GameObject("Content_" + categoryName, typeof(RectTransform));
-            contentObj.transform.SetParent(sectionObj.transform, false);
-
-            Image contentBg = contentObj.AddComponent<Image>();
-            contentBg.color = new Color(0.08f, 0.08f, 0.12f, 0.5f);
-
-            VerticalLayoutGroup contentVlg = contentObj.AddComponent<VerticalLayoutGroup>();
-            contentVlg.childControlHeight = false;
-            contentVlg.childControlWidth = true;
-            contentVlg.childForceExpandHeight = false;
-            contentVlg.childForceExpandWidth = true;
-            contentVlg.spacing = 6;
-            contentVlg.padding = new RectOffset(20, 10, 8, 12);
-
-            ContentSizeFitter contentCsf = contentObj.AddComponent<ContentSizeFitter>();
-            contentCsf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            LayoutElement contentLe = contentObj.AddComponent<LayoutElement>();
-            contentLe.flexibleWidth = 1;
-
-            // ── Wire toggle ────────────────────────────────────────────────────
-            var capturedContentObj  = contentObj;
-            var capturedLabelObj    = labelObj;
-            string capturedName     = categoryName;
-            var capturedSectionRt   = (RectTransform)sectionObj.transform;
-            var capturedScrollContent = (RectTransform)parent;
-
-            headerBtn.onClick.AddListener(() =>
-            {
-                bool expanded = !capturedContentObj.activeSelf;
-                capturedContentObj.SetActive(expanded);
-                SetCategoryLabelText(capturedLabelObj, (expanded ? "▼  " : "▶  ") + capturedName);
-                Canvas.ForceUpdateCanvases();
-                LayoutRebuilder.ForceRebuildLayoutImmediate(capturedSectionRt);
-                LayoutRebuilder.ForceRebuildLayoutImmediate(capturedScrollContent);
-            });
-
-            return contentObj.transform;
-        }
-
-        private void SetCategoryLabelText(GameObject labelObj, string text)
-        {
-#if TMP_PRESENT
-            var tmp = labelObj.GetComponent<TextMeshProUGUI>();
-            if (tmp != null) tmp.text = text;
-#else
-            var t = labelObj.GetComponent<Text>();
-            if (t != null) t.text = text;
-#endif
         }
 
         // ═════════════════════════════════════════════════════════════════════════════
         // UI ELEMENT CREATION
         // ═════════════════════════════════════════════════════════════════════════════
+
+        private void CreateSectionHeader(Transform parent, string text)
+        {
+            GameObject header = new GameObject("SectionHeader_" + text, typeof(RectTransform));
+            header.transform.SetParent(parent, false);
+
+            RectTransform rt = (RectTransform)header.transform;
+            rt.sizeDelta = new Vector2(0, 40);
+
+#if TMP_PRESENT
+            TextMeshProUGUI textComp = header.AddComponent<TextMeshProUGUI>();
+            textComp.text = text;
+            textComp.fontSize = 24;
+            textComp.fontStyle = FontStyles.Bold;
+            textComp.color = new Color(0.4f, 0.8f, 1f);
+            if (_calibriTMPFont != null)
+                textComp.font = _calibriTMPFont;
+#else
+            Text textComp = header.AddComponent<Text>();
+            textComp.text = text;
+            textComp.fontSize = 24;
+            textComp.fontStyle = FontStyle.Bold;
+            textComp.color = new Color(0.4f, 0.8f, 1f);
+            textComp.font = _calibriFont;
+#endif
+
+            LayoutElement le = header.AddComponent<LayoutElement>();
+            le.minHeight = 40;
+        }
 
         private void CreateLabelInContent(Transform parent, string text)
         {
@@ -1098,12 +1143,21 @@ namespace Alzaki.GlobalSettings
             textRt.offsetMin = new Vector2(5, 0);
             textRt.offsetMax = new Vector2(-5, 0);
 
+#if TMP_PRESENT
+            TextMeshProUGUI textComp = textObj.AddComponent<TextMeshProUGUI>();
+            textComp.font = _calibriTMPFont;
+            textComp.fontSize = 18;
+            textComp.color = Color.white;
+            textComp.alignment = TextAlignmentOptions.MidlineLeft;
+            textComp.richText = false;
+#else
             Text textComp = textObj.AddComponent<Text>();
             textComp.font = _calibriFont;
             textComp.fontSize = 18;
             textComp.color = Color.white;
             textComp.alignment = TextAnchor.MiddleLeft;
             textComp.supportRichText = false;
+#endif
 
             input.textComponent = textComp;
 
@@ -1118,13 +1172,17 @@ namespace Alzaki.GlobalSettings
             GameObject container = new GameObject("Input_" + label, typeof(RectTransform));
             container.transform.SetParent(parent, false);
 
+            RectTransform containerRt = (RectTransform)container.transform;
+            containerRt.sizeDelta = new Vector2(100, 40);
+
             HorizontalLayoutGroup hlg = container.AddComponent<HorizontalLayoutGroup>();
             hlg.spacing = 5;
-            hlg.childControlWidth = false;
+            hlg.childControlWidth = true;
             hlg.childControlHeight = true;
 
             LayoutElement containerLe = container.AddComponent<LayoutElement>();
             containerLe.preferredWidth = 100;
+            containerLe.preferredHeight = 40;
 
             // Label
             GameObject labelObj = new GameObject("Label", typeof(RectTransform));
@@ -1134,14 +1192,16 @@ namespace Alzaki.GlobalSettings
             TextMeshProUGUI labelText = labelObj.AddComponent<TextMeshProUGUI>();
             labelText.text = label;
             labelText.font = _calibriTMPFont;
-            labelText.fontSize = 14;
+            labelText.fontSize = 18;
             labelText.color = Color.gray;
+            labelText.alignment = TextAlignmentOptions.Center;
 #else
             Text labelText = labelObj.AddComponent<Text>();
             labelText.text = label;
             labelText.font = _calibriFont;
-            labelText.fontSize = 14;
+            labelText.fontSize = 18;
             labelText.color = Color.gray;
+            labelText.alignment = TextAlignmentOptions.Center;
 #endif
 
             LayoutElement labelLe = labelObj.AddComponent<LayoutElement>();
@@ -1165,11 +1225,19 @@ namespace Alzaki.GlobalSettings
             textRt.offsetMin = new Vector2(3, 0);
             textRt.offsetMax = new Vector2(-3, 0);
 
+#if TMP_PRESENT
+            TextMeshProUGUI textComp = textObj.AddComponent<TextMeshProUGUI>();
+            textComp.font = _calibriTMPFont;
+            textComp.fontSize = 14;
+            textComp.color = Color.white;
+            textComp.alignment = TextAlignmentOptions.Center;
+#else
             Text textComp = textObj.AddComponent<Text>();
             textComp.font = _calibriFont;
             textComp.fontSize = 14;
             textComp.color = Color.white;
-            textComp.alignment = TextAnchor.MiddleLeft;
+            textComp.alignment = TextAnchor.MiddleCenter;
+#endif
 
             input.textComponent = textComp;
 
@@ -1703,6 +1771,28 @@ namespace Alzaki.GlobalSettings
             return slider;
         }
 
+#if TMP_PRESENT
+        private TextMeshProUGUI CreateTextComponent(Transform parent, string initialText)
+        {
+            GameObject textObj = new GameObject("Text", typeof(RectTransform));
+            textObj.transform.SetParent(parent, false);
+
+            RectTransform textRt = (RectTransform)textObj.transform;
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = new Vector2(5, 2);
+            textRt.offsetMax = new Vector2(-5, -2);
+
+            TextMeshProUGUI text = textObj.AddComponent<TextMeshProUGUI>();
+            text.text = initialText;
+            text.font = _calibriTMPFont;
+            text.fontSize = 14;
+            text.color = Color.white;
+            text.alignment = TextAlignmentOptions.Center;
+
+            return text;
+        }
+#else
         private Text CreateTextComponent(Transform parent, string initialText)
         {
             GameObject textObj = new GameObject("Text", typeof(RectTransform));
@@ -1723,6 +1813,7 @@ namespace Alzaki.GlobalSettings
 
             return text;
         }
+#endif
 
         private void CreateHexCodeField(Transform parent)
         {

@@ -107,54 +107,33 @@ namespace Alzaki.GlobalSettings
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // SETTINGS CATEGORY
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// A named group of settings displayed as a foldable section in the runtime panel.
-    /// </summary>
-    [Serializable]
-    public class SettingsCategory
-    {
-        public string categoryName = "New Category";
-
-        [SerializeField] public List<IntSetting> intSettings = new List<IntSetting>();
-        [SerializeField] public List<FloatSetting> floatSettings = new List<FloatSetting>();
-        [SerializeField] public List<StringSetting> stringSettings = new List<StringSetting>();
-        [SerializeField] public List<BoolSetting> boolSettings = new List<BoolSetting>();
-        [SerializeField] public List<ColorSetting> colorSettings = new List<ColorSetting>();
-        [SerializeField] public List<Vector2Setting> vector2Settings = new List<Vector2Setting>();
-        [SerializeField] public List<Vector3Setting> vector3Settings = new List<Vector3Setting>();
-        [SerializeField] public List<AnimationCurveSetting> curveSettings = new List<AnimationCurveSetting>();
-        [SerializeField] public List<EnumSetting> enumSettings = new List<EnumSetting>();
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
     // GLOBAL SETTINGS (Odin-Free)
     // ═══════════════════════════════════════════════════════════════════════════
 
     /// <summary>
     /// Global settings container using Unity's native serialization.
-    /// Settings are grouped into named categories, each shown as a foldable
-    /// section in the runtime panel.
+    /// Supports common Unity types with inspector editing.
     /// Automatically loaded from Resources folder before scene load.
     /// </summary>
     [CreateAssetMenu(fileName = "GlobalSettings", menuName = "Alzaki/Global Settings", order = 0)]
     public class GlobalSettings : ScriptableObject
     {
         // ───────────────────────────────────────────────────────────────────────
-        // SERIALIZED DATA
+        // SERIALIZED DATA (Lists for Unity serialization)
         // ───────────────────────────────────────────────────────────────────────
 
-        [SerializeField] private List<SettingsCategory> categories = new List<SettingsCategory>();
-
-        /// <summary>
-        /// All setting categories. Used by the runtime panel to render foldable sections.
-        /// </summary>
-        public List<SettingsCategory> Categories => categories;
+        [SerializeField] private List<IntSetting> intSettings = new List<IntSetting>();
+        [SerializeField] private List<FloatSetting> floatSettings = new List<FloatSetting>();
+        [SerializeField] private List<StringSetting> stringSettings = new List<StringSetting>();
+        [SerializeField] private List<BoolSetting> boolSettings = new List<BoolSetting>();
+        [SerializeField] private List<ColorSetting> colorSettings = new List<ColorSetting>();
+        [SerializeField] private List<Vector2Setting> vector2Settings = new List<Vector2Setting>();
+        [SerializeField] private List<Vector3Setting> vector3Settings = new List<Vector3Setting>();
+        [SerializeField] private List<AnimationCurveSetting> curveSettings = new List<AnimationCurveSetting>();
+        [SerializeField] private List<EnumSetting> enumSettings = new List<EnumSetting>();
 
         // ───────────────────────────────────────────────────────────────────────
-        // RUNTIME DICTIONARIES (Built from categories for O(1) lookup)
+        // RUNTIME DICTIONARIES (Built from lists for O(1) lookup)
         // ───────────────────────────────────────────────────────────────────────
 
         private Dictionary<string, int> _intDict;
@@ -180,47 +159,41 @@ namespace Alzaki.GlobalSettings
 
         private void BuildDictionaries()
         {
-            _intDict    = new Dictionary<string, int>();
-            _floatDict  = new Dictionary<string, float>();
+            _intDict = new Dictionary<string, int>();
+            foreach (var s in intSettings)
+                if (!string.IsNullOrEmpty(s.key)) _intDict[s.key] = s.value;
+
+            _floatDict = new Dictionary<string, float>();
+            foreach (var s in floatSettings)
+                if (!string.IsNullOrEmpty(s.key)) _floatDict[s.key] = s.value;
+
             _stringDict = new Dictionary<string, string>();
-            _boolDict   = new Dictionary<string, bool>();
-            _colorDict  = new Dictionary<string, Color>();
+            foreach (var s in stringSettings)
+                if (!string.IsNullOrEmpty(s.key)) _stringDict[s.key] = s.value;
+
+            _boolDict = new Dictionary<string, bool>();
+            foreach (var s in boolSettings)
+                if (!string.IsNullOrEmpty(s.key)) _boolDict[s.key] = s.value;
+
+            _colorDict = new Dictionary<string, Color>();
+            foreach (var s in colorSettings)
+                if (!string.IsNullOrEmpty(s.key)) _colorDict[s.key] = s.value;
+
             _vector2Dict = new Dictionary<string, Vector2>();
+            foreach (var s in vector2Settings)
+                if (!string.IsNullOrEmpty(s.key)) _vector2Dict[s.key] = s.value;
+
             _vector3Dict = new Dictionary<string, Vector3>();
-            _curveDict  = new Dictionary<string, AnimationCurve>();
-            _enumDict   = new Dictionary<string, EnumSetting>();
+            foreach (var s in vector3Settings)
+                if (!string.IsNullOrEmpty(s.key)) _vector3Dict[s.key] = s.value;
 
-            foreach (var category in categories)
-            {
-                if (category == null) continue;
+            _curveDict = new Dictionary<string, AnimationCurve>();
+            foreach (var s in curveSettings)
+                if (!string.IsNullOrEmpty(s.key)) _curveDict[s.key] = s.value;
 
-                foreach (var s in category.intSettings)
-                    if (!string.IsNullOrEmpty(s.key)) _intDict[s.key] = s.value;
-
-                foreach (var s in category.floatSettings)
-                    if (!string.IsNullOrEmpty(s.key)) _floatDict[s.key] = s.value;
-
-                foreach (var s in category.stringSettings)
-                    if (!string.IsNullOrEmpty(s.key)) _stringDict[s.key] = s.value;
-
-                foreach (var s in category.boolSettings)
-                    if (!string.IsNullOrEmpty(s.key)) _boolDict[s.key] = s.value;
-
-                foreach (var s in category.colorSettings)
-                    if (!string.IsNullOrEmpty(s.key)) _colorDict[s.key] = s.value;
-
-                foreach (var s in category.vector2Settings)
-                    if (!string.IsNullOrEmpty(s.key)) _vector2Dict[s.key] = s.value;
-
-                foreach (var s in category.vector3Settings)
-                    if (!string.IsNullOrEmpty(s.key)) _vector3Dict[s.key] = s.value;
-
-                foreach (var s in category.curveSettings)
-                    if (!string.IsNullOrEmpty(s.key)) _curveDict[s.key] = s.value;
-
-                foreach (var s in category.enumSettings)
-                    if (!string.IsNullOrEmpty(s.key)) _enumDict[s.key] = s;
-            }
+            _enumDict = new Dictionary<string, EnumSetting>();
+            foreach (var s in enumSettings)
+                if (!string.IsNullOrEmpty(s.key)) _enumDict[s.key] = s;
 
             _initialized = true;
         }
@@ -228,17 +201,6 @@ namespace Alzaki.GlobalSettings
         private void EnsureInitialized()
         {
             if (!_initialized) BuildDictionaries();
-        }
-
-        /// <summary>
-        /// Returns the first category, creating a default "General" one if none exist.
-        /// Used as a fallback when a key created at runtime has no category to belong to.
-        /// </summary>
-        private SettingsCategory EnsureDefaultCategory()
-        {
-            if (categories.Count == 0)
-                categories.Add(new SettingsCategory { categoryName = "General" });
-            return categories[0];
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -504,7 +466,7 @@ namespace Alzaki.GlobalSettings
                     intValue = setting.intValue
                 };
                 _enumDict[setting.key] = newSetting;
-                EnsureDefaultCategory().enumSettings.Add(newSetting);
+                enumSettings.Add(newSetting);
             }
         }
 
@@ -514,7 +476,15 @@ namespace Alzaki.GlobalSettings
 
         public void ClearAll()
         {
-            categories.Clear();
+            intSettings.Clear();
+            floatSettings.Clear();
+            stringSettings.Clear();
+            boolSettings.Clear();
+            colorSettings.Clear();
+            vector2Settings.Clear();
+            vector3Settings.Clear();
+            curveSettings.Clear();
+            enumSettings.Clear();
             BuildDictionaries();
         }
 
@@ -527,99 +497,78 @@ namespace Alzaki.GlobalSettings
         }
 
         // ───────────────────────────────────────────────────────────────────────
-        // SYNC HELPERS (Keep category lists and dictionaries in sync at runtime)
+        // SYNC HELPERS (Keep list and dictionary in sync at runtime)
         // ───────────────────────────────────────────────────────────────────────
 
         private void SyncIntToList(string key, int value)
         {
-            foreach (var category in categories)
-            {
-                var existing = category.intSettings.Find(s => s.key == key);
-                if (existing != null) { existing.value = value; return; }
-            }
-            EnsureDefaultCategory().intSettings.Add(new IntSetting { key = key, value = value });
+            var existing = intSettings.Find(s => s.key == key);
+            if (existing != null) existing.value = value;
+            else intSettings.Add(new IntSetting { key = key, value = value });
         }
 
         private void SyncFloatToList(string key, float value)
         {
-            foreach (var category in categories)
-            {
-                var existing = category.floatSettings.Find(s => s.key == key);
-                if (existing != null) { existing.value = value; return; }
-            }
-            EnsureDefaultCategory().floatSettings.Add(new FloatSetting { key = key, value = value });
+            var existing = floatSettings.Find(s => s.key == key);
+            if (existing != null) existing.value = value;
+            else floatSettings.Add(new FloatSetting { key = key, value = value });
         }
 
         private void SyncStringToList(string key, string value)
         {
-            foreach (var category in categories)
-            {
-                var existing = category.stringSettings.Find(s => s.key == key);
-                if (existing != null) { existing.value = value; return; }
-            }
-            EnsureDefaultCategory().stringSettings.Add(new StringSetting { key = key, value = value });
+            var existing = stringSettings.Find(s => s.key == key);
+            if (existing != null) existing.value = value;
+            else stringSettings.Add(new StringSetting { key = key, value = value });
         }
 
         private void SyncBoolToList(string key, bool value)
         {
-            foreach (var category in categories)
-            {
-                var existing = category.boolSettings.Find(s => s.key == key);
-                if (existing != null) { existing.value = value; return; }
-            }
-            EnsureDefaultCategory().boolSettings.Add(new BoolSetting { key = key, value = value });
+            var existing = boolSettings.Find(s => s.key == key);
+            if (existing != null) existing.value = value;
+            else boolSettings.Add(new BoolSetting { key = key, value = value });
         }
 
         private void SyncColorToList(string key, Color value)
         {
-            foreach (var category in categories)
-            {
-                var existing = category.colorSettings.Find(s => s.key == key);
-                if (existing != null) { existing.value = value; return; }
-            }
-            EnsureDefaultCategory().colorSettings.Add(new ColorSetting { key = key, value = value });
+            var existing = colorSettings.Find(s => s.key == key);
+            if (existing != null) existing.value = value;
+            else colorSettings.Add(new ColorSetting { key = key, value = value });
         }
 
         private void SyncVector2ToList(string key, Vector2 value)
         {
-            foreach (var category in categories)
-            {
-                var existing = category.vector2Settings.Find(s => s.key == key);
-                if (existing != null) { existing.value = value; return; }
-            }
-            EnsureDefaultCategory().vector2Settings.Add(new Vector2Setting { key = key, value = value });
+            var existing = vector2Settings.Find(s => s.key == key);
+            if (existing != null) existing.value = value;
+            else vector2Settings.Add(new Vector2Setting { key = key, value = value });
         }
 
         private void SyncVector3ToList(string key, Vector3 value)
         {
-            foreach (var category in categories)
-            {
-                var existing = category.vector3Settings.Find(s => s.key == key);
-                if (existing != null) { existing.value = value; return; }
-            }
-            EnsureDefaultCategory().vector3Settings.Add(new Vector3Setting { key = key, value = value });
+            var existing = vector3Settings.Find(s => s.key == key);
+            if (existing != null) existing.value = value;
+            else vector3Settings.Add(new Vector3Setting { key = key, value = value });
         }
 
         private void SyncCurveToList(string key, AnimationCurve value)
         {
-            foreach (var category in categories)
-            {
-                var existing = category.curveSettings.Find(s => s.key == key);
-                if (existing != null) { existing.value = value; return; }
-            }
-            EnsureDefaultCategory().curveSettings.Add(new AnimationCurveSetting { key = key, value = value });
+            var existing = curveSettings.Find(s => s.key == key);
+            if (existing != null) existing.value = value;
+            else curveSettings.Add(new AnimationCurveSetting { key = key, value = value });
         }
 
         private void SyncEnumToList<T>(string key, T value) where T : Enum
         {
-            foreach (var category in categories)
+            var existing = enumSettings.Find(s => s.key == key);
+            if (existing != null)
             {
-                var existing = category.enumSettings.Find(s => s.key == key);
-                if (existing != null) { existing.SetEnumValue(value); return; }
+                existing.SetEnumValue(value);
             }
-            var newSetting = new EnumSetting { key = key };
-            newSetting.SetEnumValue(value);
-            EnsureDefaultCategory().enumSettings.Add(newSetting);
+            else
+            {
+                var newSetting = new EnumSetting { key = key };
+                newSetting.SetEnumValue(value);
+                enumSettings.Add(newSetting);
+            }
         }
     }
 }
