@@ -91,6 +91,36 @@ namespace Alzaki.GlobalSettings
             {
                 Toggle();
             }
+
+            UpdateDynamicPanelSize();
+        }
+
+        private void UpdateDynamicPanelSize()
+        {
+            if (_panelRoot == null || _canvas == null) return;
+
+            RectTransform panelRt = (RectTransform)_panelRoot.transform;
+            RectTransform canvasRt = (RectTransform)_canvas.transform;
+
+            float maxWidth = canvasRt.rect.width * 0.95f;
+            float maxHeight = canvasRt.rect.height * 0.95f;
+
+            // Start with 80% of screen height, but at least 700, and never exceeding screen
+            float targetHeight = canvasRt.rect.height * 0.8f;
+            targetHeight = Mathf.Max(targetHeight, 700f);
+            targetHeight = Mathf.Min(targetHeight, maxHeight);
+
+            // Calculate proportional width (8:7)
+            float targetWidth = targetHeight * (800f / 700f);
+
+            // Never exceed screen width
+            targetWidth = Mathf.Min(targetWidth, maxWidth);
+
+            // But if the proportional width is too squished, force it to be at least 800 
+            // (as long as it fits on the screen!)
+            targetWidth = Mathf.Max(targetWidth, Mathf.Min(800f, maxWidth));
+
+            panelRt.sizeDelta = new Vector2(targetWidth, targetHeight);
         }
 
         private bool IsToggleKeyPressed()
@@ -242,6 +272,7 @@ namespace Alzaki.GlobalSettings
             CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
 
             canvasObj.AddComponent<GraphicRaycaster>();
 
