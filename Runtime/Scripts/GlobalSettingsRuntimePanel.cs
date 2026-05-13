@@ -428,157 +428,32 @@ namespace Alzaki.GlobalSettings
                 return;
             }
 
-            Type settingsType = _originalSettings.GetType();
             int totalFieldsAdded = 0;
 
-            // Get int settings (now a List<IntSetting>)
-            var intField = settingsType.GetField("intSettings", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (intField != null)
+            if (_originalSettings.categories != null)
             {
-                var intList = intField.GetValue(_originalSettings) as List<IntSetting>;
-                if (intList != null && intList.Count > 0)
+                foreach (var category in _originalSettings.categories)
                 {
-                    CreateSectionHeader(content, "Integer Settings");
-                    foreach (var s in intList)
+                    bool hasItems = false;
+                    if (category.intSettings.Count > 0 || category.floatSettings.Count > 0 || category.stringSettings.Count > 0 ||
+                        category.boolSettings.Count > 0 || category.colorSettings.Count > 0 || category.vector2Settings.Count > 0 ||
+                        category.vector3Settings.Count > 0 || category.enumSettings.Count > 0)
                     {
-                        if (!string.IsNullOrEmpty(s.key))
-                        {
-                            CreateIntField(content, s.key, s.value);
-                            totalFieldsAdded++;
-                        }
+                        hasItems = true;
                     }
-                }
-            }
 
-            // Get float settings
-            var floatField = settingsType.GetField("floatSettings", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (floatField != null)
-            {
-                var floatList = floatField.GetValue(_originalSettings) as List<FloatSetting>;
-                if (floatList != null && floatList.Count > 0)
-                {
-                    CreateSectionHeader(content, "Float Settings");
-                    foreach (var s in floatList)
+                    if (hasItems)
                     {
-                        if (!string.IsNullOrEmpty(s.key))
-                        {
-                            CreateFloatField(content, s.key, s.value);
-                            totalFieldsAdded++;
-                        }
-                    }
-                }
-            }
+                        CreateSectionHeader(content, category.categoryName);
 
-            // Get string settings
-            var stringField = settingsType.GetField("stringSettings", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (stringField != null)
-            {
-                var stringList = stringField.GetValue(_originalSettings) as List<StringSetting>;
-                if (stringList != null && stringList.Count > 0)
-                {
-                    CreateSectionHeader(content, "String Settings");
-                    foreach (var s in stringList)
-                    {
-                        if (!string.IsNullOrEmpty(s.key))
-                        {
-                            CreateStringField(content, s.key, s.value);
-                            totalFieldsAdded++;
-                        }
-                    }
-                }
-            }
-
-            // Get bool settings
-            var boolField = settingsType.GetField("boolSettings", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (boolField != null)
-            {
-                var boolList = boolField.GetValue(_originalSettings) as List<BoolSetting>;
-                if (boolList != null && boolList.Count > 0)
-                {
-                    CreateSectionHeader(content, "Bool Settings");
-                    foreach (var s in boolList)
-                    {
-                        if (!string.IsNullOrEmpty(s.key))
-                        {
-                            CreateBoolField(content, s.key, s.value);
-                            totalFieldsAdded++;
-                        }
-                    }
-                }
-            }
-
-            // Get color settings
-            var colorField = settingsType.GetField("colorSettings", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (colorField != null)
-            {
-                var colorList = colorField.GetValue(_originalSettings) as List<ColorSetting>;
-                if (colorList != null && colorList.Count > 0)
-                {
-                    CreateSectionHeader(content, "Color Settings");
-                    foreach (var s in colorList)
-                    {
-                        if (!string.IsNullOrEmpty(s.key))
-                        {
-                            CreateColorField(content, s.key, s.value);
-                            totalFieldsAdded++;
-                        }
-                    }
-                }
-            }
-
-            // Get Vector2 settings
-            var vector2Field = settingsType.GetField("vector2Settings", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (vector2Field != null)
-            {
-                var vector2List = vector2Field.GetValue(_originalSettings) as List<Vector2Setting>;
-                if (vector2List != null && vector2List.Count > 0)
-                {
-                    CreateSectionHeader(content, "Vector2 Settings");
-                    foreach (var s in vector2List)
-                    {
-                        if (!string.IsNullOrEmpty(s.key))
-                        {
-                            CreateVector2Field(content, s.key, s.value);
-                            totalFieldsAdded++;
-                        }
-                    }
-                }
-            }
-
-            // Get Vector3 settings
-            var vector3Field = settingsType.GetField("vector3Settings", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (vector3Field != null)
-            {
-                var vector3List = vector3Field.GetValue(_originalSettings) as List<Vector3Setting>;
-                if (vector3List != null && vector3List.Count > 0)
-                {
-                    CreateSectionHeader(content, "Vector3 Settings");
-                    foreach (var s in vector3List)
-                    {
-                        if (!string.IsNullOrEmpty(s.key))
-                        {
-                            CreateVector3Field(content, s.key, s.value);
-                            totalFieldsAdded++;
-                        }
-                    }
-                }
-            }
-
-            // Get Enum settings
-            var enumField = settingsType.GetField("enumSettings", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (enumField != null)
-            {
-                var enumList = enumField.GetValue(_originalSettings) as List<EnumSetting>;
-                if (enumList != null && enumList.Count > 0)
-                {
-                    CreateSectionHeader(content, "Enum Settings");
-                    foreach (var s in enumList)
-                    {
-                        if (!string.IsNullOrEmpty(s.key))
-                        {
-                            CreateEnumField(content, s);
-                            totalFieldsAdded++;
-                        }
+                        foreach (var s in category.intSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateIntField(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in category.floatSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateFloatField(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in category.stringSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateStringField(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in category.boolSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateBoolField(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in category.colorSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateColorField(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in category.vector2Settings) { if (!string.IsNullOrEmpty(s.key)) { CreateVector2Field(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in category.vector3Settings) { if (!string.IsNullOrEmpty(s.key)) { CreateVector3Field(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in category.enumSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateEnumField(content, s); totalFieldsAdded++; } }
                     }
                 }
             }

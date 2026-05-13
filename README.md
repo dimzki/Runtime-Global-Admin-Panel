@@ -13,29 +13,6 @@ A lightweight, standalone global settings system for Unity with a runtime admin 
 - **Resource-Based**: Loads from Resources folder - no scene dependencies
 - **Enum Support**: Full enum support with searchable type selector
 
-## Installation
-
-### Install via Unity Package Manager (UPM) - Recommended
-
-You can install this package directly via the Unity Package Manager using the Git URL.
-
-1. Open your Unity project.
-2. Go to **Window > Package Manager**.
-3. Click the **+** button in the top-left corner.
-4. Select **Add package from git URL...**
-5. Enter the following URL and click **Add**:
-   `https://github.com/dimzki/Runtime-Global-Admin-Panel.git`
-
-*Note: You can also append a specific version tag or branch to the URL (e.g., `https://github.com/dimzki/Runtime-Global-Admin-Panel.git#v2.0.0`).*
-
-### Install via manifest.json
-
-Alternatively, you can open your project's `Packages/manifest.json` file and add the following line to your `"dependencies"` block:
-
-```json
-"com.alzaki.runtimeglobaladminpanel": "https://github.com/dimzki/Runtime-Global-Admin-Panel.git"
-```
-
 ## Setup
 
 ### 1. Create GlobalSettings Asset
