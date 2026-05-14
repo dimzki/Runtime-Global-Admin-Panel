@@ -24,8 +24,9 @@ You can install this package directly via the Unity Package Manager using the Gi
 3. Click the **+** button in the top-left corner.
 4. Select **Add package from git URL...**
 5. Enter the following URL and click **Add**:
+   
    ```json
-https://github.com/dimzki/Runtime-Global-Admin-Panel.git
+"https://github.com/dimzki/Runtime-Global-Admin-Panel.git"
 ```
    `https://github.com/dimzki/Runtime-Global-Admin-Panel.git`
 
