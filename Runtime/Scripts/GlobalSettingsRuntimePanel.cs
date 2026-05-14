@@ -1107,7 +1107,7 @@ namespace Alzaki.GlobalSettings
             labelText.font = _calibriFont;
             labelText.fontSize = 18;
             labelText.color = Color.gray;
-            labelText.alignment = TextAlignmentOptions.Center;
+            labelText.alignment = TextAnchor.MiddleCenter;
 #endif
 
             LayoutElement labelLe = labelObj.AddComponent<LayoutElement>();
