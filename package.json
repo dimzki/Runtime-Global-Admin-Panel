@@ -1,6 +1,6 @@
 {
   "name": "com.alzaki.runtimeglobaladminpanel",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "displayName": "Runtime Global Admin Panel",
   "description": "A lightweight, standalone global settings system for Unity with a runtime admin panel for testing and configuration during play mode. Features include pre-scene loading, support for multiple data types (Int, Float, String, Bool, Color, Vector2, Vector3, Enum), custom inspector UI, and a beautiful runtime panel with color picker - all without any third-party dependencies.",
   "unity": "2020.3",

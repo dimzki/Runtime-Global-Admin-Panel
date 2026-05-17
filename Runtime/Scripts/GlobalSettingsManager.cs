@@ -132,9 +132,48 @@ namespace Alzaki.GlobalSettings
                 try
                 {
                     string json = System.IO.File.ReadAllText(path);
-                    JsonUtility.FromJsonOverwrite(json, _settings);
+
+                    // Create a temporary instance to deserialize the saved JSON without destroying the fresh build asset structure
+                    GlobalSettings savedData = ScriptableObject.CreateInstance<GlobalSettings>();
+                    JsonUtility.FromJsonOverwrite(json, savedData);
+                    savedData.RefreshDictionaries();
+
+                    // Iterate through the fresh build asset categories and only apply values for matching keys
+                    foreach (var cat in _settings.categories)
+                    {
+                        foreach (var s in cat.intSettings) { if (savedData.HasInt(s.key)) s.value = savedData.GetInt(s.key); }
+                        foreach (var s in cat.floatSettings) { if (savedData.HasFloat(s.key)) s.value = savedData.GetFloat(s.key); }
+                        foreach (var s in cat.stringSettings) { if (savedData.HasString(s.key)) s.value = savedData.GetString(s.key); }
+                        foreach (var s in cat.boolSettings) { if (savedData.HasBool(s.key)) s.value = savedData.GetBool(s.key); }
+                        foreach (var s in cat.colorSettings) { if (savedData.HasColor(s.key)) s.value = savedData.GetColor(s.key); }
+                        foreach (var s in cat.vector2Settings) { if (savedData.HasVector2(s.key)) s.value = savedData.GetVector2(s.key); }
+                        foreach (var s in cat.vector3Settings) { if (savedData.HasVector3(s.key)) s.value = savedData.GetVector3(s.key); }
+                        foreach (var s in cat.curveSettings) { if (savedData.HasCurve(s.key)) s.value = savedData.GetCurve(s.key); }
+                        foreach (var s in cat.enumSettings)
+                        {
+                            if (savedData.HasEnum(s.key))
+                            {
+                                var savedEnum = savedData.GetEnumSetting(s.key);
+                                if (savedEnum != null && savedEnum.enumTypeName == s.enumTypeName)
+                                {
+                                    s.intValue = savedEnum.intValue;
+                                }
+                            }
+                        }
+                    }
+
                     _settings.RefreshDictionaries();
-                    Debug.Log($"[GlobalSettingsManager] Loaded settings from disk: {path}");
+
+                    if (Application.isPlaying)
+                    {
+                        Destroy(savedData);
+                    }
+                    else
+                    {
+                        DestroyImmediate(savedData);
+                    }
+
+                    Debug.Log($"[GlobalSettingsManager] Loaded settings from disk (matching keys only): {path}");
                 }
                 catch (Exception e)
                 {
