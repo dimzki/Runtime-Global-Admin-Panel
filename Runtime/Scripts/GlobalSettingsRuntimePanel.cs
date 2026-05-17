@@ -378,6 +378,7 @@ namespace Alzaki.GlobalSettings
             ScrollRect scroll = scrollView.AddComponent<ScrollRect>();
             scroll.horizontal = false;
             scroll.vertical = true;
+            scroll.scrollSensitivity = 25f;
 
             GameObject viewport = new GameObject("Viewport", typeof(RectTransform));
             viewport.transform.SetParent(scrollView.transform, false);
@@ -416,6 +417,47 @@ namespace Alzaki.GlobalSettings
 
             scroll.viewport = vpRt;
             scroll.content = contentRt;
+
+            // Scrollbar Vertical
+            GameObject scrollbarObj = new GameObject("Scrollbar Vertical", typeof(RectTransform));
+            scrollbarObj.transform.SetParent(scrollView.transform, false);
+
+            RectTransform scrollbarRt = (RectTransform)scrollbarObj.transform;
+            scrollbarRt.anchorMin = new Vector2(1, 0);
+            scrollbarRt.anchorMax = new Vector2(1, 1);
+            scrollbarRt.pivot = new Vector2(1, 0.5f);
+            scrollbarRt.sizeDelta = new Vector2(15, 0);
+            scrollbarRt.anchoredPosition = Vector2.zero;
+
+            Image scrollbarBg = scrollbarObj.AddComponent<Image>();
+            scrollbarBg.color = new Color(0.15f, 0.15f, 0.15f, 0.8f);
+
+            Scrollbar scrollbar = scrollbarObj.AddComponent<Scrollbar>();
+            scrollbar.direction = Scrollbar.Direction.BottomToTop;
+
+            GameObject slidingArea = new GameObject("Sliding Area", typeof(RectTransform));
+            slidingArea.transform.SetParent(scrollbarObj.transform, false);
+
+            RectTransform slidingAreaRt = (RectTransform)slidingArea.transform;
+            slidingAreaRt.anchorMin = Vector2.zero;
+            slidingAreaRt.anchorMax = Vector2.one;
+            slidingAreaRt.sizeDelta = new Vector2(-4, -4);
+
+            GameObject handle = new GameObject("Handle", typeof(RectTransform));
+            handle.transform.SetParent(slidingArea.transform, false);
+
+            RectTransform handleRt = (RectTransform)handle.transform;
+            handleRt.sizeDelta = Vector2.zero;
+
+            Image handleImg = handle.AddComponent<Image>();
+            handleImg.color = new Color(0.5f, 0.5f, 0.5f, 1f);
+
+            scrollbar.handleRect = handleRt;
+            scrollbar.targetGraphic = handleImg;
+
+            scroll.verticalScrollbar = scrollbar;
+            scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+            scroll.verticalScrollbarSpacing = 5;
 
             return scrollView;
         }
