@@ -1993,6 +1993,7 @@ namespace Alzaki.GlobalSettings
                     GlobalSettingsManager.Settings.SetEnumSetting(kvp.Value);
             }
 
+            GlobalSettingsManager.SaveToDisk();
             GlobalSettingsManager.OnAdminPanelSaved?.Invoke();
 
             Debug.Log("[GlobalSettingsRuntimePanel] Settings saved!");

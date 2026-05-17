@@ -101,6 +101,45 @@ namespace Alzaki.GlobalSettings
             else
             {
                 Debug.Log($"[GlobalSettingsManager] GlobalSettings loaded successfully from Resources/{SETTINGS_RESOURCE_PATH}");
+                LoadFromDisk();
+            }
+        }
+
+        public static void SaveToDisk()
+        {
+            if (_settings == null) return;
+
+            try
+            {
+                string json = JsonUtility.ToJson(_settings);
+                string path = System.IO.Path.Combine(Application.persistentDataPath, "GlobalSettingsSave.json");
+                System.IO.File.WriteAllText(path, json);
+                Debug.Log($"[GlobalSettingsManager] Saved settings to disk: {path}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[GlobalSettingsManager] Failed to save settings to disk: {e.Message}");
+            }
+        }
+
+        public static void LoadFromDisk()
+        {
+            if (_settings == null) return;
+
+            string path = System.IO.Path.Combine(Application.persistentDataPath, "GlobalSettingsSave.json");
+            if (System.IO.File.Exists(path))
+            {
+                try
+                {
+                    string json = System.IO.File.ReadAllText(path);
+                    JsonUtility.FromJsonOverwrite(json, _settings);
+                    _settings.RefreshDictionaries();
+                    Debug.Log($"[GlobalSettingsManager] Loaded settings from disk: {path}");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[GlobalSettingsManager] Failed to load settings from disk: {e.Message}");
+                }
             }
         }
 
