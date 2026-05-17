@@ -111,7 +111,7 @@ namespace Alzaki.GlobalSettings
 
             try
             {
-                string json = JsonUtility.ToJson(_settings);
+                string json = JsonUtility.ToJson(_settings, true);
                 string path = System.IO.Path.Combine(Application.persistentDataPath, "GlobalSettingsSave.json");
                 System.IO.File.WriteAllText(path, json);
                 Debug.Log($"[GlobalSettingsManager] Saved settings to disk: {path}");
