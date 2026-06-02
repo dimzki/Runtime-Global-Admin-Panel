@@ -78,6 +78,7 @@ namespace Alzaki.GlobalSettings
 
         public bool GetHasPassword() => HasPassword;
         public string GetPassword() => Password;
+        public void SetPassword(string newPassword) => Password = newPassword;
 
         [SerializeField] public List<SettingsCategory> categories = new List<SettingsCategory>();
 

@@ -55,6 +55,7 @@ namespace Alzaki.GlobalSettings
         private Dictionary<string, Vector2> _tempVector2s = new Dictionary<string, Vector2>();
         private Dictionary<string, Vector3> _tempVector3s = new Dictionary<string, Vector3>();
         private Dictionary<string, EnumSetting> _tempEnums = new Dictionary<string, EnumSetting>();
+        private string _tempAdminPassword = "";
 
         private GameObject _passwordOverlay;
         private string _enteredPassword = "";
@@ -571,6 +572,12 @@ namespace Alzaki.GlobalSettings
             {
                 CreateLabelInContent(content, "No settings found! Add settings to GlobalSettings asset.");
             }
+
+            if (_originalSettings.GetHasPassword())
+            {
+                CreateSectionHeader(content, "Security");
+                CreatePasswordFieldInPanel(content, "Admin Password", _originalSettings.GetPassword());
+            }
         }
 
         // ═════════════════════════════════════════════════════════════════════════════
@@ -677,6 +684,21 @@ namespace Alzaki.GlobalSettings
             input.onValueChanged.AddListener((newValue) =>
             {
                 _tempStrings[key] = newValue;
+            });
+        }
+
+        private void CreatePasswordFieldInPanel(Transform parent, string key, string value)
+        {
+            GameObject field = CreateFieldRow(parent, key);
+            InputField input = CreateInputField(field.transform);
+            input.text = value;
+            input.contentType = InputField.ContentType.IntegerNumber;
+
+            _tempAdminPassword = value;
+
+            input.onValueChanged.AddListener((newValue) =>
+            {
+                _tempAdminPassword = newValue;
             });
         }
 
@@ -2399,6 +2421,11 @@ namespace Alzaki.GlobalSettings
             {
                 foreach (var kvp in _tempEnums)
                     GlobalSettingsManager.Settings.SetEnumSetting(kvp.Value);
+
+                if (GlobalSettingsManager.Settings.GetHasPassword())
+                {
+                    GlobalSettingsManager.Settings.SetPassword(_tempAdminPassword);
+                }
             }
 
             GlobalSettingsManager.SaveToDisk();

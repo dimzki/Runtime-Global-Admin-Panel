@@ -164,6 +164,11 @@ namespace Alzaki.GlobalSettings
 
                     _settings.RefreshDictionaries();
 
+                    if (_settings.GetHasPassword())
+                    {
+                        _settings.SetPassword(savedData.GetPassword());
+                    }
+
                     if (Application.isPlaying)
                     {
                         Destroy(savedData);
