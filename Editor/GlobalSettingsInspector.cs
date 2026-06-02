@@ -11,6 +11,31 @@ namespace Alzaki.GlobalSettings
             serializedObject.Update();
 
             EditorGUILayout.Space(5);
+            SerializedProperty hasPasswordProp = serializedObject.FindProperty("HasPassword");
+            EditorGUILayout.PropertyField(hasPasswordProp);
+            if (hasPasswordProp.boolValue)
+            {
+                EditorGUI.indentLevel++;
+                SerializedProperty passwordProp = serializedObject.FindProperty("Password");
+                
+                EditorGUI.BeginChangeCheck();
+                string newPassword = EditorGUILayout.TextField(passwordProp.displayName, passwordProp.stringValue);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    string filteredPassword = "";
+                    for (int i = 0; i < newPassword.Length; i++)
+                    {
+                        if (char.IsDigit(newPassword[i]))
+                        {
+                            filteredPassword += newPassword[i];
+                        }
+                    }
+                    passwordProp.stringValue = filteredPassword;
+                }
+                
+                EditorGUI.indentLevel--;
+            }
+            EditorGUILayout.Space(10);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("categories"), true);
             EditorGUILayout.Space(10);
 

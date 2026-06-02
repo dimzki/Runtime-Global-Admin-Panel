@@ -73,6 +73,12 @@ namespace Alzaki.GlobalSettings
     [CreateAssetMenu(fileName = "GlobalSettings", menuName = "Alzaki/Global Settings", order = 0)]
     public class GlobalSettings : ScriptableObject
     {
+        [SerializeField] private bool HasPassword = false;
+        [SerializeField] private string Password = "0000";
+
+        public bool GetHasPassword() => HasPassword;
+        public string GetPassword() => Password;
+
         [SerializeField] public List<SettingsCategory> categories = new List<SettingsCategory>();
 
         private Dictionary<string, int> _intDict;

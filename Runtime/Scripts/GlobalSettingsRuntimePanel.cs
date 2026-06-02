@@ -56,6 +56,17 @@ namespace Alzaki.GlobalSettings
         private Dictionary<string, Vector3> _tempVector3s = new Dictionary<string, Vector3>();
         private Dictionary<string, EnumSetting> _tempEnums = new Dictionary<string, EnumSetting>();
 
+        private GameObject _passwordOverlay;
+        private string _enteredPassword = "";
+#if TMP_PRESENT
+        private TextMeshProUGUI _passwordInputTextTMP;
+#else
+        private Text _passwordInputText;
+#endif
+
+        private GameObject _passwordErrorBox;
+        private float _passwordErrorTimer = 0f;
+
         // ═════════════════════════════════════════════════════════════════════════════
         // LIFECYCLE
         // ═════════════════════════════════════════════════════════════════════════════
@@ -93,6 +104,48 @@ namespace Alzaki.GlobalSettings
             }
 
             UpdateDynamicPanelSize();
+
+            if (_passwordErrorTimer > 0f)
+            {
+                _passwordErrorTimer -= Time.deltaTime;
+                if (_passwordErrorTimer <= 0f && _passwordErrorBox != null)
+                {
+                    _passwordErrorBox.SetActive(false);
+                }
+            }
+        }
+
+        private void OnGUI()
+        {
+            if (_passwordOverlay != null && _passwordOverlay.activeSelf)
+            {
+                Event e = Event.current;
+                if (e.type == EventType.KeyDown)
+                {
+                    if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
+                    {
+                        OnPasswordConfirm();
+                    }
+                    else if (e.keyCode == KeyCode.Backspace)
+                    {
+                        OnNumpadBackspace();
+                        e.Use(); // Prevent default
+                    }
+                    else if (e.character != 0)
+                    {
+                        if (char.IsDigit(e.character))
+                        {
+                            OnNumpadPressed(e.character.ToString());
+                            e.Use();
+                        }
+                        else if (char.IsLetter(e.character))
+                        {
+                            ShowPasswordError();
+                            e.Use();
+                        }
+                    }
+                }
+            }
         }
 
         private void UpdateDynamicPanelSize()
@@ -236,7 +289,21 @@ namespace Alzaki.GlobalSettings
 
             _panelRoot.SetActive(true);
             _isVisible = true;
-            LoadCurrentValues();
+
+            if (_originalSettings != null && _originalSettings.GetHasPassword())
+            {
+                if (_passwordOverlay == null)
+                    CreatePasswordOverlay();
+                
+                _enteredPassword = "";
+                UpdatePasswordDisplay();
+                _passwordOverlay.SetActive(true);
+            }
+            else
+            {
+                if (_passwordOverlay != null) _passwordOverlay.SetActive(false);
+                LoadCurrentValues();
+            }
         }
 
         public void Hide()
@@ -272,7 +339,7 @@ namespace Alzaki.GlobalSettings
             CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
-            scaler.matchWidthOrHeight = 0.5f;
+            scaler.matchWidthOrHeight = 1f; // Match height fully to prevent vertical squishing on ultra-wide screens
 
             canvasObj.AddComponent<GraphicRaycaster>();
 
@@ -1908,6 +1975,305 @@ namespace Alzaki.GlobalSettings
         private void OnColorPickerCancel()
         {
             _colorPickerPanel.SetActive(false);
+        }
+
+        // ═════════════════════════════════════════════════════════════════════════════
+        // PASSWORD OVERLAY
+        // ═════════════════════════════════════════════════════════════════════════════
+
+        private void CreatePasswordOverlay()
+        {
+            _passwordOverlay = new GameObject("PasswordOverlay", typeof(RectTransform));
+            _passwordOverlay.transform.SetParent(_panelRoot.transform, false);
+
+            RectTransform overlayRt = (RectTransform)_passwordOverlay.transform;
+            overlayRt.anchorMin = Vector2.zero;
+            overlayRt.anchorMax = Vector2.one;
+            overlayRt.offsetMin = Vector2.zero;
+            overlayRt.offsetMax = Vector2.zero;
+
+            Image bg = _passwordOverlay.AddComponent<Image>();
+            bg.color = new Color(0.1f, 0.1f, 0.1f, 1f); // Dark background like main panel
+            bg.raycastTarget = true; // Block clicks to the panel below
+
+            GameObject box = new GameObject("PasswordBox", typeof(RectTransform));
+            box.transform.SetParent(_passwordOverlay.transform, false);
+
+            RectTransform boxRt = (RectTransform)box.transform;
+            boxRt.anchorMin = new Vector2(0.5f, 0.5f);
+            boxRt.anchorMax = new Vector2(0.5f, 0.5f);
+            boxRt.sizeDelta = new Vector2(350, 500);
+            boxRt.anchoredPosition = Vector2.zero;
+
+            // Title
+            GameObject titleObj = new GameObject("Title", typeof(RectTransform));
+            titleObj.transform.SetParent(box.transform, false);
+            RectTransform titleRt = (RectTransform)titleObj.transform;
+            titleRt.anchorMin = new Vector2(0, 1);
+            titleRt.anchorMax = new Vector2(1, 1);
+            titleRt.pivot = new Vector2(0.5f, 1);
+            titleRt.sizeDelta = new Vector2(0, 60);
+            titleRt.anchoredPosition = new Vector2(0, -10);
+
+#if TMP_PRESENT
+            TextMeshProUGUI title = titleObj.AddComponent<TextMeshProUGUI>();
+            title.text = "Enter Password";
+            title.fontSize = 24;
+            title.fontStyle = FontStyles.Bold;
+            title.alignment = TextAlignmentOptions.Center;
+            title.color = Color.white;
+            if (_calibriTMPFont != null) title.font = _calibriTMPFont;
+#else
+            Text title = titleObj.AddComponent<Text>();
+            title.text = "Enter Password";
+            title.fontSize = 24;
+            title.fontStyle = FontStyle.Bold;
+            title.alignment = TextAnchor.MiddleCenter;
+            title.color = Color.white;
+            title.font = _calibriFont;
+#endif
+
+            // Input Display
+            GameObject inputDisplayObj = new GameObject("InputDisplay", typeof(RectTransform));
+            inputDisplayObj.transform.SetParent(box.transform, false);
+            RectTransform inputRt = (RectTransform)inputDisplayObj.transform;
+            inputRt.anchorMin = new Vector2(0.5f, 1);
+            inputRt.anchorMax = new Vector2(0.5f, 1);
+            inputRt.pivot = new Vector2(0.5f, 1);
+            inputRt.sizeDelta = new Vector2(300, 45);
+            inputRt.anchoredPosition = new Vector2(0, -70);
+
+            Image inputBg = inputDisplayObj.AddComponent<Image>();
+            inputBg.color = new Color(0.15f, 0.15f, 0.15f, 1f);
+            
+            // outline
+            CreateBorderLine(inputDisplayObj.transform, "BorderTop", Color.gray, 1f, new Vector2(0,1), new Vector2(1,1), new Vector2(0,-1), Vector2.zero);
+            CreateBorderLine(inputDisplayObj.transform, "BorderBottom", Color.gray, 1f, new Vector2(0,0), new Vector2(1,0), Vector2.zero, new Vector2(0,1));
+            CreateBorderLine(inputDisplayObj.transform, "BorderLeft", Color.gray, 1f, new Vector2(0,0), new Vector2(0,1), Vector2.zero, new Vector2(1,0));
+            CreateBorderLine(inputDisplayObj.transform, "BorderRight", Color.gray, 1f, new Vector2(1,0), new Vector2(1,1), new Vector2(-1,0), Vector2.zero);
+
+            GameObject textObj = new GameObject("Text", typeof(RectTransform));
+            textObj.transform.SetParent(inputDisplayObj.transform, false);
+            RectTransform textRt = (RectTransform)textObj.transform;
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = new Vector2(10, 0);
+            textRt.offsetMax = new Vector2(-10, 0);
+
+#if TMP_PRESENT
+            _passwordInputTextTMP = textObj.AddComponent<TextMeshProUGUI>();
+            _passwordInputTextTMP.fontSize = 20;
+            _passwordInputTextTMP.color = Color.white;
+            _passwordInputTextTMP.alignment = TextAlignmentOptions.Center;
+            _passwordInputTextTMP.richText = true;
+            if (_calibriTMPFont != null) _passwordInputTextTMP.font = _calibriTMPFont;
+#else
+            _passwordInputText = textObj.AddComponent<Text>();
+            _passwordInputText.fontSize = 20;
+            _passwordInputText.color = Color.white;
+            _passwordInputText.alignment = TextAnchor.MiddleCenter;
+            _passwordInputText.supportRichText = true;
+            _passwordInputText.font = _calibriFont;
+#endif
+
+            // Error Box
+            _passwordErrorBox = new GameObject("ErrorBox", typeof(RectTransform));
+            _passwordErrorBox.transform.SetParent(box.transform, false);
+            RectTransform errorRt = (RectTransform)_passwordErrorBox.transform;
+            errorRt.anchorMin = new Vector2(0.5f, 1);
+            errorRt.anchorMax = new Vector2(0.5f, 1);
+            errorRt.pivot = new Vector2(0.5f, 1);
+            errorRt.sizeDelta = new Vector2(300, 30);
+            errorRt.anchoredPosition = new Vector2(0, -115);
+
+            Image errorBg = _passwordErrorBox.AddComponent<Image>();
+            errorBg.color = new Color(0.8f, 0.2f, 0.2f, 0.9f);
+
+            GameObject errorTextObj = new GameObject("Text", typeof(RectTransform));
+            errorTextObj.transform.SetParent(_passwordErrorBox.transform, false);
+            RectTransform errorTextRt = (RectTransform)errorTextObj.transform;
+            errorTextRt.anchorMin = Vector2.zero;
+            errorTextRt.anchorMax = Vector2.one;
+            errorTextRt.offsetMin = Vector2.zero;
+            errorTextRt.offsetMax = Vector2.zero;
+
+#if TMP_PRESENT
+            TextMeshProUGUI errorText = errorTextObj.AddComponent<TextMeshProUGUI>();
+            errorText.text = "Numbers only allowed.";
+            errorText.fontSize = 14;
+            errorText.color = Color.white;
+            errorText.alignment = TextAlignmentOptions.Center;
+            if (_calibriTMPFont != null) errorText.font = _calibriTMPFont;
+#else
+            Text errorText = errorTextObj.AddComponent<Text>();
+            errorText.text = "Numbers only allowed.";
+            errorText.fontSize = 14;
+            errorText.color = Color.white;
+            errorText.alignment = TextAnchor.MiddleCenter;
+            errorText.font = _calibriFont;
+#endif
+
+            _passwordErrorBox.SetActive(false);
+
+            // Numpad Grid
+            GameObject gridObj = new GameObject("NumpadGrid", typeof(RectTransform));
+            gridObj.transform.SetParent(box.transform, false);
+            RectTransform gridRt = (RectTransform)gridObj.transform;
+            gridRt.anchorMin = new Vector2(0.5f, 1);
+            gridRt.anchorMax = new Vector2(0.5f, 1);
+            gridRt.pivot = new Vector2(0.5f, 1);
+            gridRt.sizeDelta = new Vector2(300, 260);
+            gridRt.anchoredPosition = new Vector2(0, -155);
+
+            GridLayoutGroup glg = gridObj.AddComponent<GridLayoutGroup>();
+            glg.cellSize = new Vector2(90, 55);
+            glg.spacing = new Vector2(15, 10);
+            glg.startCorner = GridLayoutGroup.Corner.UpperLeft;
+            glg.startAxis = GridLayoutGroup.Axis.Horizontal;
+            glg.childAlignment = TextAnchor.UpperCenter;
+
+            // Buttons 1-9
+            for (int i = 1; i <= 9; i++)
+            {
+                int num = i;
+                CreateNumpadButton(gridObj.transform, num.ToString(), () => OnNumpadPressed(num.ToString()));
+            }
+
+            // Empty, 0, Backspace
+            GameObject emptyObj = new GameObject("Empty", typeof(RectTransform));
+            emptyObj.transform.SetParent(gridObj.transform, false);
+
+            CreateNumpadButton(gridObj.transform, "0", () => OnNumpadPressed("0"));
+            CreateNumpadButton(gridObj.transform, "<", OnNumpadBackspace);
+
+            // Bottom Buttons (Cancel, Confirm)
+            GameObject bottomRow = new GameObject("BottomButtons", typeof(RectTransform));
+            bottomRow.transform.SetParent(box.transform, false);
+            RectTransform bottomRt = (RectTransform)bottomRow.transform;
+            bottomRt.anchorMin = new Vector2(0.5f, 0);
+            bottomRt.anchorMax = new Vector2(0.5f, 0);
+            bottomRt.pivot = new Vector2(0.5f, 0);
+            bottomRt.sizeDelta = new Vector2(300, 50);
+            bottomRt.anchoredPosition = new Vector2(0, 20);
+
+            HorizontalLayoutGroup bottomHlg = bottomRow.AddComponent<HorizontalLayoutGroup>();
+            bottomHlg.spacing = 15;
+            bottomHlg.childControlWidth = true;
+            bottomHlg.childControlHeight = true;
+            bottomHlg.childForceExpandWidth = true;
+            bottomHlg.childForceExpandHeight = true;
+
+            // Use the standard CreateButton
+            CreateButton(bottomRow.transform, "Cancel", new Color(0.8f, 0.3f, 0.3f), OnPasswordCancel);
+            CreateButton(bottomRow.transform, "Confirm", new Color(0.3f, 0.8f, 0.3f), OnPasswordConfirm);
+
+            _passwordOverlay.SetActive(false);
+        }
+
+        private void CreateNumpadButton(Transform parent, string text, UnityEngine.Events.UnityAction action)
+        {
+            GameObject btnObj = new GameObject("NumpadBtn_" + text, typeof(RectTransform));
+            btnObj.transform.SetParent(parent, false);
+
+            Image img = btnObj.AddComponent<Image>();
+            img.color = new Color(0.2f, 0.2f, 0.2f, 1f); // dark grey
+
+            CreateBorderLine(btnObj.transform, "BorderTop", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(0,1), new Vector2(1,1), new Vector2(0,-1), Vector2.zero);
+            CreateBorderLine(btnObj.transform, "BorderBottom", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(0,0), new Vector2(1,0), Vector2.zero, new Vector2(0,1));
+            CreateBorderLine(btnObj.transform, "BorderLeft", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(0,0), new Vector2(0,1), Vector2.zero, new Vector2(1,0));
+            CreateBorderLine(btnObj.transform, "BorderRight", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(1,0), new Vector2(1,1), new Vector2(-1,0), Vector2.zero);
+
+            Button btn = btnObj.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(action);
+
+            GameObject textObj = new GameObject("Text", typeof(RectTransform));
+            textObj.transform.SetParent(btnObj.transform, false);
+            RectTransform textRt = (RectTransform)textObj.transform;
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = Vector2.zero;
+            textRt.offsetMax = Vector2.zero;
+
+#if TMP_PRESENT
+            TextMeshProUGUI textComp = textObj.AddComponent<TextMeshProUGUI>();
+            textComp.text = text;
+            textComp.fontSize = 24;
+            textComp.color = Color.white;
+            textComp.alignment = TextAlignmentOptions.Center;
+            if (_calibriTMPFont != null) textComp.font = _calibriTMPFont;
+#else
+            Text textComp = textObj.AddComponent<Text>();
+            textComp.text = text;
+            textComp.fontSize = 24;
+            textComp.color = Color.white;
+            textComp.alignment = TextAnchor.MiddleCenter;
+            textComp.font = _calibriFont;
+#endif
+        }
+
+        private void OnNumpadPressed(string val)
+        {
+            _enteredPassword += val;
+            UpdatePasswordDisplay();
+        }
+
+        private void OnNumpadBackspace()
+        {
+            if (_enteredPassword.Length > 0)
+            {
+                _enteredPassword = _enteredPassword.Substring(0, _enteredPassword.Length - 1);
+                UpdatePasswordDisplay();
+            }
+        }
+
+        private void UpdatePasswordDisplay()
+        {
+            string passStr = _originalSettings != null ? _originalSettings.GetPassword() : "0000";
+            int passLength = passStr.Length;
+
+            string displayText = _enteredPassword;
+            if (string.IsNullOrEmpty(_enteredPassword))
+            {
+                // Show placeholder
+                displayText = $"<color=#808080>Enter {passLength}-digit password</color>";
+            }
+
+#if TMP_PRESENT
+            if (_passwordInputTextTMP != null) _passwordInputTextTMP.text = displayText;
+#else
+            if (_passwordInputText != null) _passwordInputText.text = displayText;
+#endif
+        }
+
+        private void OnPasswordConfirm()
+        {
+            string targetPass = _originalSettings != null ? _originalSettings.GetPassword() : "0000";
+            if (_enteredPassword == targetPass)
+            {
+                _passwordOverlay.SetActive(false);
+                LoadCurrentValues();
+            }
+            else
+            {
+                _enteredPassword = "";
+                UpdatePasswordDisplay();
+            }
+        }
+
+        private void OnPasswordCancel()
+        {
+            _passwordOverlay.SetActive(false);
+            Hide();
+        }
+
+        private void ShowPasswordError()
+        {
+            if (_passwordErrorBox != null)
+            {
+                _passwordErrorBox.SetActive(true);
+                _passwordErrorTimer = 2.0f; // hide after 2 seconds
+            }
         }
 
         // ═════════════════════════════════════════════════════════════════════════════
