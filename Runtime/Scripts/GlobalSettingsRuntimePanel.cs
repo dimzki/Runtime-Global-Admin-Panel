@@ -556,10 +556,19 @@ namespace Alzaki.GlobalSettings
                     if (!string.IsNullOrEmpty(_currentCategoryFilter) && category.categoryName != _currentCategoryFilter)
                         continue;
 
+                    var intList = category.useIndependentScriptableObject && category.independentScriptableObject != null ? category.independentScriptableObject.intSettings : category.intSettings;
+                    var floatList = category.useIndependentScriptableObject && category.independentScriptableObject != null ? category.independentScriptableObject.floatSettings : category.floatSettings;
+                    var stringList = category.useIndependentScriptableObject && category.independentScriptableObject != null ? category.independentScriptableObject.stringSettings : category.stringSettings;
+                    var boolList = category.useIndependentScriptableObject && category.independentScriptableObject != null ? category.independentScriptableObject.boolSettings : category.boolSettings;
+                    var colorList = category.useIndependentScriptableObject && category.independentScriptableObject != null ? category.independentScriptableObject.colorSettings : category.colorSettings;
+                    var vector2List = category.useIndependentScriptableObject && category.independentScriptableObject != null ? category.independentScriptableObject.vector2Settings : category.vector2Settings;
+                    var vector3List = category.useIndependentScriptableObject && category.independentScriptableObject != null ? category.independentScriptableObject.vector3Settings : category.vector3Settings;
+                    var enumList = category.useIndependentScriptableObject && category.independentScriptableObject != null ? category.independentScriptableObject.enumSettings : category.enumSettings;
+
                     bool hasItems = false;
-                    if (category.intSettings.Count > 0 || category.floatSettings.Count > 0 || category.stringSettings.Count > 0 ||
-                        category.boolSettings.Count > 0 || category.colorSettings.Count > 0 || category.vector2Settings.Count > 0 ||
-                        category.vector3Settings.Count > 0 || category.enumSettings.Count > 0)
+                    if (intList.Count > 0 || floatList.Count > 0 || stringList.Count > 0 ||
+                        boolList.Count > 0 || colorList.Count > 0 || vector2List.Count > 0 ||
+                        vector3List.Count > 0 || enumList.Count > 0)
                     {
                         hasItems = true;
                     }
@@ -568,14 +577,14 @@ namespace Alzaki.GlobalSettings
                     {
                         CreateSectionHeader(content, category.categoryName);
 
-                        foreach (var s in category.intSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateIntField(content, s.key, s.value); totalFieldsAdded++; } }
-                        foreach (var s in category.floatSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateFloatField(content, s.key, s.value); totalFieldsAdded++; } }
-                        foreach (var s in category.stringSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateStringField(content, s.key, s.value); totalFieldsAdded++; } }
-                        foreach (var s in category.boolSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateBoolField(content, s.key, s.value); totalFieldsAdded++; } }
-                        foreach (var s in category.colorSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateColorField(content, s.key, s.value); totalFieldsAdded++; } }
-                        foreach (var s in category.vector2Settings) { if (!string.IsNullOrEmpty(s.key)) { CreateVector2Field(content, s.key, s.value); totalFieldsAdded++; } }
-                        foreach (var s in category.vector3Settings) { if (!string.IsNullOrEmpty(s.key)) { CreateVector3Field(content, s.key, s.value); totalFieldsAdded++; } }
-                        foreach (var s in category.enumSettings) { if (!string.IsNullOrEmpty(s.key)) { CreateEnumField(content, s); totalFieldsAdded++; } }
+                        foreach (var s in intList) { if (!string.IsNullOrEmpty(s.key)) { CreateIntField(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in floatList) { if (!string.IsNullOrEmpty(s.key)) { CreateFloatField(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in stringList) { if (!string.IsNullOrEmpty(s.key)) { CreateStringField(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in boolList) { if (!string.IsNullOrEmpty(s.key)) { CreateBoolField(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in colorList) { if (!string.IsNullOrEmpty(s.key)) { CreateColorField(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in vector2List) { if (!string.IsNullOrEmpty(s.key)) { CreateVector2Field(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in vector3List) { if (!string.IsNullOrEmpty(s.key)) { CreateVector3Field(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in enumList) { if (!string.IsNullOrEmpty(s.key)) { CreateEnumField(content, s); totalFieldsAdded++; } }
                     }
                 }
             }
