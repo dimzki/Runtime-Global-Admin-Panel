@@ -56,6 +56,7 @@ namespace Alzaki.GlobalSettings
         private Dictionary<string, Vector3> _tempVector3s = new Dictionary<string, Vector3>();
         private Dictionary<string, EnumSetting> _tempEnums = new Dictionary<string, EnumSetting>();
         private string _tempAdminPassword = "";
+        private string _currentCategoryFilter = "";
 
         private GameObject _passwordOverlay;
         private string _enteredPassword = "";
@@ -283,8 +284,16 @@ namespace Alzaki.GlobalSettings
         // PUBLIC API
         // ═════════════════════════════════════════════════════════════════════════════
 
-        public void Show()
+        public void Show(string categoryName = "")
         {
+            if (_panelRoot != null && _currentCategoryFilter != categoryName)
+            {
+                Destroy(_panelRoot);
+                _panelRoot = null;
+            }
+            
+            _currentCategoryFilter = categoryName;
+
             if (_panelRoot == null)
                 CreatePanel();
 
@@ -315,12 +324,12 @@ namespace Alzaki.GlobalSettings
             _isVisible = false;
         }
 
-        public void Toggle()
+        public void Toggle(string categoryName = "")
         {
-            if (_isVisible)
+            if (_isVisible && _currentCategoryFilter == categoryName)
                 Hide();
             else
-                Show();
+                Show(categoryName);
         }
 
         // ═════════════════════════════════════════════════════════════════════════════
@@ -544,6 +553,9 @@ namespace Alzaki.GlobalSettings
             {
                 foreach (var category in _originalSettings.categories)
                 {
+                    if (!string.IsNullOrEmpty(_currentCategoryFilter) && category.categoryName != _currentCategoryFilter)
+                        continue;
+
                     bool hasItems = false;
                     if (category.intSettings.Count > 0 || category.floatSettings.Count > 0 || category.stringSettings.Count > 0 ||
                         category.boolSettings.Count > 0 || category.colorSettings.Count > 0 || category.vector2Settings.Count > 0 ||

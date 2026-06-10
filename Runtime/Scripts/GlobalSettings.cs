@@ -55,6 +55,10 @@ namespace Alzaki.GlobalSettings
     public class SettingsCategory
     {
         public string categoryName = "New Category";
+        public bool useIndependentScriptableObject = false;
+        public SettingsCategoryScriptableObject independentScriptableObject;
+
+
         public List<IntSetting> intSettings = new List<IntSetting>();
         public List<FloatSetting> floatSettings = new List<FloatSetting>();
         public List<StringSetting> stringSettings = new List<StringSetting>();
@@ -110,15 +114,25 @@ namespace Alzaki.GlobalSettings
 
             foreach (var cat in categories)
             {
-                foreach (var s in cat.intSettings) if (!string.IsNullOrEmpty(s.key)) _intDict[s.key] = s.value;
-                foreach (var s in cat.floatSettings) if (!string.IsNullOrEmpty(s.key)) _floatDict[s.key] = s.value;
-                foreach (var s in cat.stringSettings) if (!string.IsNullOrEmpty(s.key)) _stringDict[s.key] = s.value;
-                foreach (var s in cat.boolSettings) if (!string.IsNullOrEmpty(s.key)) _boolDict[s.key] = s.value;
-                foreach (var s in cat.colorSettings) if (!string.IsNullOrEmpty(s.key)) _colorDict[s.key] = s.value;
-                foreach (var s in cat.vector2Settings) if (!string.IsNullOrEmpty(s.key)) _vector2Dict[s.key] = s.value;
-                foreach (var s in cat.vector3Settings) if (!string.IsNullOrEmpty(s.key)) _vector3Dict[s.key] = s.value;
-                foreach (var s in cat.curveSettings) if (!string.IsNullOrEmpty(s.key)) _curveDict[s.key] = s.value;
-                foreach (var s in cat.enumSettings) if (!string.IsNullOrEmpty(s.key)) _enumDict[s.key] = s;
+                var intList = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.intSettings : cat.intSettings;
+                var floatList = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.floatSettings : cat.floatSettings;
+                var stringList = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.stringSettings : cat.stringSettings;
+                var boolList = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.boolSettings : cat.boolSettings;
+                var colorList = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.colorSettings : cat.colorSettings;
+                var vector2List = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.vector2Settings : cat.vector2Settings;
+                var vector3List = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.vector3Settings : cat.vector3Settings;
+                var curveList = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.curveSettings : cat.curveSettings;
+                var enumList = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.enumSettings : cat.enumSettings;
+
+                foreach (var s in intList) if (!string.IsNullOrEmpty(s.key)) _intDict[s.key] = s.value;
+                foreach (var s in floatList) if (!string.IsNullOrEmpty(s.key)) _floatDict[s.key] = s.value;
+                foreach (var s in stringList) if (!string.IsNullOrEmpty(s.key)) _stringDict[s.key] = s.value;
+                foreach (var s in boolList) if (!string.IsNullOrEmpty(s.key)) _boolDict[s.key] = s.value;
+                foreach (var s in colorList) if (!string.IsNullOrEmpty(s.key)) _colorDict[s.key] = s.value;
+                foreach (var s in vector2List) if (!string.IsNullOrEmpty(s.key)) _vector2Dict[s.key] = s.value;
+                foreach (var s in vector3List) if (!string.IsNullOrEmpty(s.key)) _vector3Dict[s.key] = s.value;
+                foreach (var s in curveList) if (!string.IsNullOrEmpty(s.key)) _curveDict[s.key] = s.value;
+                foreach (var s in enumList) if (!string.IsNullOrEmpty(s.key)) _enumDict[s.key] = s;
             }
 
             _initialized = true;
@@ -175,15 +189,23 @@ namespace Alzaki.GlobalSettings
 
         private SettingsCategory GetOrCreateDefaultCategory() { if (categories.Count == 0) categories.Add(new SettingsCategory { categoryName = "Generic" }); return categories[0]; }
 
-        private void SyncIntToList(string key, int value) { foreach (var cat in categories) { var existing = cat.intSettings.Find(s => s.key == key); if (existing != null) { existing.value = value; return; } } GetOrCreateDefaultCategory().intSettings.Add(new IntSetting { key = key, value = value }); }
-        private void SyncFloatToList(string key, float value) { foreach (var cat in categories) { var existing = cat.floatSettings.Find(s => s.key == key); if (existing != null) { existing.value = value; return; } } GetOrCreateDefaultCategory().floatSettings.Add(new FloatSetting { key = key, value = value }); }
-        private void SyncStringToList(string key, string value) { foreach (var cat in categories) { var existing = cat.stringSettings.Find(s => s.key == key); if (existing != null) { existing.value = value; return; } } GetOrCreateDefaultCategory().stringSettings.Add(new StringSetting { key = key, value = value }); }
-        private void SyncBoolToList(string key, bool value) { foreach (var cat in categories) { var existing = cat.boolSettings.Find(s => s.key == key); if (existing != null) { existing.value = value; return; } } GetOrCreateDefaultCategory().boolSettings.Add(new BoolSetting { key = key, value = value }); }
-        private void SyncColorToList(string key, Color value) { foreach (var cat in categories) { var existing = cat.colorSettings.Find(s => s.key == key); if (existing != null) { existing.value = value; return; } } GetOrCreateDefaultCategory().colorSettings.Add(new ColorSetting { key = key, value = value }); }
-        private void SyncVector2ToList(string key, Vector2 value) { foreach (var cat in categories) { var existing = cat.vector2Settings.Find(s => s.key == key); if (existing != null) { existing.value = value; return; } } GetOrCreateDefaultCategory().vector2Settings.Add(new Vector2Setting { key = key, value = value }); }
-        private void SyncVector3ToList(string key, Vector3 value) { foreach (var cat in categories) { var existing = cat.vector3Settings.Find(s => s.key == key); if (existing != null) { existing.value = value; return; } } GetOrCreateDefaultCategory().vector3Settings.Add(new Vector3Setting { key = key, value = value }); }
-        private void SyncCurveToList(string key, AnimationCurve value) { foreach (var cat in categories) { var existing = cat.curveSettings.Find(s => s.key == key); if (existing != null) { existing.value = value; return; } } GetOrCreateDefaultCategory().curveSettings.Add(new AnimationCurveSetting { key = key, value = value }); }
-        private void SyncEnumToList<T>(string key, T value) where T : Enum { foreach (var cat in categories) { var existing = cat.enumSettings.Find(s => s.key == key); if (existing != null) { existing.SetEnumValue(value); return; } } var newSetting = new EnumSetting { key = key }; newSetting.SetEnumValue(value); GetOrCreateDefaultCategory().enumSettings.Add(newSetting); }
-        private void SyncEnumSettingToList(EnumSetting setting) { foreach (var cat in categories) { var existing = cat.enumSettings.Find(s => s.key == setting.key); if (existing != null) { existing.enumTypeName = setting.enumTypeName; existing.intValue = setting.intValue; return; } } GetOrCreateDefaultCategory().enumSettings.Add(setting); }
+        private void MarkDirtyIfIndependent(SettingsCategory cat)
+        {
+#if UNITY_EDITOR
+            if (cat.useIndependentScriptableObject && cat.independentScriptableObject != null)
+                UnityEditor.EditorUtility.SetDirty(cat.independentScriptableObject);
+#endif
+        }
+
+        private void SyncIntToList(string key, int value) { foreach (var cat in categories) { var list = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.intSettings : cat.intSettings; var existing = list.Find(s => s.key == key); if (existing != null) { existing.value = value; MarkDirtyIfIndependent(cat); return; } } var defaultCat = GetOrCreateDefaultCategory(); var targetList = defaultCat.useIndependentScriptableObject && defaultCat.independentScriptableObject != null ? defaultCat.independentScriptableObject.intSettings : defaultCat.intSettings; targetList.Add(new IntSetting { key = key, value = value }); MarkDirtyIfIndependent(defaultCat); }
+        private void SyncFloatToList(string key, float value) { foreach (var cat in categories) { var list = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.floatSettings : cat.floatSettings; var existing = list.Find(s => s.key == key); if (existing != null) { existing.value = value; MarkDirtyIfIndependent(cat); return; } } var defaultCat = GetOrCreateDefaultCategory(); var targetList = defaultCat.useIndependentScriptableObject && defaultCat.independentScriptableObject != null ? defaultCat.independentScriptableObject.floatSettings : defaultCat.floatSettings; targetList.Add(new FloatSetting { key = key, value = value }); MarkDirtyIfIndependent(defaultCat); }
+        private void SyncStringToList(string key, string value) { foreach (var cat in categories) { var list = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.stringSettings : cat.stringSettings; var existing = list.Find(s => s.key == key); if (existing != null) { existing.value = value; MarkDirtyIfIndependent(cat); return; } } var defaultCat = GetOrCreateDefaultCategory(); var targetList = defaultCat.useIndependentScriptableObject && defaultCat.independentScriptableObject != null ? defaultCat.independentScriptableObject.stringSettings : defaultCat.stringSettings; targetList.Add(new StringSetting { key = key, value = value }); MarkDirtyIfIndependent(defaultCat); }
+        private void SyncBoolToList(string key, bool value) { foreach (var cat in categories) { var list = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.boolSettings : cat.boolSettings; var existing = list.Find(s => s.key == key); if (existing != null) { existing.value = value; MarkDirtyIfIndependent(cat); return; } } var defaultCat = GetOrCreateDefaultCategory(); var targetList = defaultCat.useIndependentScriptableObject && defaultCat.independentScriptableObject != null ? defaultCat.independentScriptableObject.boolSettings : defaultCat.boolSettings; targetList.Add(new BoolSetting { key = key, value = value }); MarkDirtyIfIndependent(defaultCat); }
+        private void SyncColorToList(string key, Color value) { foreach (var cat in categories) { var list = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.colorSettings : cat.colorSettings; var existing = list.Find(s => s.key == key); if (existing != null) { existing.value = value; MarkDirtyIfIndependent(cat); return; } } var defaultCat = GetOrCreateDefaultCategory(); var targetList = defaultCat.useIndependentScriptableObject && defaultCat.independentScriptableObject != null ? defaultCat.independentScriptableObject.colorSettings : defaultCat.colorSettings; targetList.Add(new ColorSetting { key = key, value = value }); MarkDirtyIfIndependent(defaultCat); }
+        private void SyncVector2ToList(string key, Vector2 value) { foreach (var cat in categories) { var list = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.vector2Settings : cat.vector2Settings; var existing = list.Find(s => s.key == key); if (existing != null) { existing.value = value; MarkDirtyIfIndependent(cat); return; } } var defaultCat = GetOrCreateDefaultCategory(); var targetList = defaultCat.useIndependentScriptableObject && defaultCat.independentScriptableObject != null ? defaultCat.independentScriptableObject.vector2Settings : defaultCat.vector2Settings; targetList.Add(new Vector2Setting { key = key, value = value }); MarkDirtyIfIndependent(defaultCat); }
+        private void SyncVector3ToList(string key, Vector3 value) { foreach (var cat in categories) { var list = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.vector3Settings : cat.vector3Settings; var existing = list.Find(s => s.key == key); if (existing != null) { existing.value = value; MarkDirtyIfIndependent(cat); return; } } var defaultCat = GetOrCreateDefaultCategory(); var targetList = defaultCat.useIndependentScriptableObject && defaultCat.independentScriptableObject != null ? defaultCat.independentScriptableObject.vector3Settings : defaultCat.vector3Settings; targetList.Add(new Vector3Setting { key = key, value = value }); MarkDirtyIfIndependent(defaultCat); }
+        private void SyncCurveToList(string key, AnimationCurve value) { foreach (var cat in categories) { var list = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.curveSettings : cat.curveSettings; var existing = list.Find(s => s.key == key); if (existing != null) { existing.value = value; MarkDirtyIfIndependent(cat); return; } } var defaultCat = GetOrCreateDefaultCategory(); var targetList = defaultCat.useIndependentScriptableObject && defaultCat.independentScriptableObject != null ? defaultCat.independentScriptableObject.curveSettings : defaultCat.curveSettings; targetList.Add(new AnimationCurveSetting { key = key, value = value }); MarkDirtyIfIndependent(defaultCat); }
+        private void SyncEnumToList<T>(string key, T value) where T : Enum { foreach (var cat in categories) { var list = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.enumSettings : cat.enumSettings; var existing = list.Find(s => s.key == key); if (existing != null) { existing.SetEnumValue(value); MarkDirtyIfIndependent(cat); return; } } var defaultCat = GetOrCreateDefaultCategory(); var targetList = defaultCat.useIndependentScriptableObject && defaultCat.independentScriptableObject != null ? defaultCat.independentScriptableObject.enumSettings : defaultCat.enumSettings; var newSetting = new EnumSetting { key = key }; newSetting.SetEnumValue(value); targetList.Add(newSetting); MarkDirtyIfIndependent(defaultCat); }
+        private void SyncEnumSettingToList(EnumSetting setting) { foreach (var cat in categories) { var list = cat.useIndependentScriptableObject && cat.independentScriptableObject != null ? cat.independentScriptableObject.enumSettings : cat.enumSettings; var existing = list.Find(s => s.key == setting.key); if (existing != null) { existing.enumTypeName = setting.enumTypeName; existing.intValue = setting.intValue; MarkDirtyIfIndependent(cat); return; } } var defaultCat = GetOrCreateDefaultCategory(); var targetList = defaultCat.useIndependentScriptableObject && defaultCat.independentScriptableObject != null ? defaultCat.independentScriptableObject.enumSettings : defaultCat.enumSettings; targetList.Add(setting); MarkDirtyIfIndependent(defaultCat); }
     }
 }

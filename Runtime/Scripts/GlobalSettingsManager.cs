@@ -227,14 +227,14 @@ namespace Alzaki.GlobalSettings
         /// Shows the runtime settings panel (works in Play Mode and Builds).
         /// Creates the panel if it doesn't exist.
         /// </summary>
-        public static void ShowRuntimePanel()
+        public static void ShowRuntimePanel(string categoryName = "")
         {
             if (_runtimePanel == null)
             {
                 CreateRuntimePanel();
             }
 
-            _runtimePanel?.Show();
+            _runtimePanel?.Show(categoryName);
         }
 
         /// <summary>
@@ -248,15 +248,15 @@ namespace Alzaki.GlobalSettings
         /// <summary>
         /// Toggles the runtime settings panel visibility.
         /// </summary>
-        public static void ToggleRuntimePanel()
+        public static void ToggleRuntimePanel(string categoryName = "")
         {
             if (_runtimePanel == null)
             {
-                ShowRuntimePanel();
+                ShowRuntimePanel(categoryName);
             }
             else
             {
-                _runtimePanel.Toggle();
+                _runtimePanel.Toggle(categoryName);
             }
         }
 
