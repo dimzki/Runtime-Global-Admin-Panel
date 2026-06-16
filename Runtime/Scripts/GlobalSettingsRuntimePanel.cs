@@ -687,20 +687,37 @@ namespace Alzaki.GlobalSettings
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             try 
             {
-                // Use full path to avoid WoW64 file system redirection issues in 32-bit builds
-                string systemDir = Environment.GetFolderPath(Environment.SpecialFolder.System);
-                string oskPath = System.IO.Path.Combine(systemDir, "osk.exe");
-                
+                // Launch via cmd.exe to avoid IL2CPP's broken UseShellExecute implementation
                 var startInfo = new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = oskPath,
-                    UseShellExecute = true
+                    FileName = "cmd.exe",
+                    Arguments = "/c start osk.exe",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 };
                 System.Diagnostics.Process.Start(startInfo); 
             } 
             catch (Exception e) 
             { 
-                Debug.LogWarning("[GlobalSettingsRuntimePanel] Failed to open virtual keyboard: " + e.GetType().Name + " - " + e.Message); 
+                // Fallback: try the modern touch keyboard (tabtip.exe)
+                try
+                {
+                    string tabtipPath = System.IO.Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles),
+                        "Microsoft Shared", "ink", "TabTip.exe");
+                    
+                    var fallbackInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = tabtipPath,
+                        UseShellExecute = false
+                    };
+                    System.Diagnostics.Process.Start(fallbackInfo);
+                }
+                catch (Exception fallbackEx)
+                {
+                    Debug.LogWarning("[GlobalSettingsRuntimePanel] Failed to open virtual keyboard: " + e.GetType().Name + " - " + e.Message 
+                        + " | Fallback also failed: " + fallbackEx.GetType().Name + " - " + fallbackEx.Message);
+                }
             }
 #else
             TouchScreenKeyboard.Open(input.text, TouchScreenKeyboardType.Default);
