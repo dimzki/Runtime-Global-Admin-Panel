@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Threading.Tasks;
 #if TMP_PRESENT
 using TMPro;
 using InputField = TMPro.TMP_InputField;
@@ -664,12 +665,42 @@ namespace Alzaki.GlobalSettings
         {
             input.onSelect.AddListener((str) =>
             {
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-                try { System.Diagnostics.Process.Start("osk.exe"); } catch (Exception e) { Debug.LogWarning("[GlobalSettingsRuntimePanel] Failed to open virtual keyboard: " + e.Message); }
-#else
-                TouchScreenKeyboard.Open(input.text, TouchScreenKeyboardType.Default);
-#endif
+                OpenVirtualKeyboardAsync(input);
             });
+        }
+
+        private async void OpenVirtualKeyboardAsync(InputField input)
+        {
+            // Wait until the user releases the mouse/touch to avoid interrupting the EventSystem's drag coroutine in TMP_InputField
+            while (UnityEngine.Input.GetMouseButton(0) || (UnityEngine.Input.touchCount > 0 && UnityEngine.Input.GetTouch(0).phase != TouchPhase.Ended))
+            {
+                await Task.Yield();
+            }
+
+            // Ensure the input is still selected before opening the keyboard
+            if (UnityEngine.EventSystems.EventSystem.current == null || 
+                UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject != input.gameObject)
+            {
+                return;
+            }
+
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            try 
+            { 
+                var startInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "osk.exe",
+                    UseShellExecute = true
+                };
+                System.Diagnostics.Process.Start(startInfo); 
+            } 
+            catch (Exception e) 
+            { 
+                Debug.LogWarning("[GlobalSettingsRuntimePanel] Failed to open virtual keyboard: " + e.Message); 
+            }
+#else
+            TouchScreenKeyboard.Open(input.text, TouchScreenKeyboardType.Default);
+#endif
         }
 
         private void CreateIntField(Transform parent, string key, int value, bool useVirtualKeyboard = false)
