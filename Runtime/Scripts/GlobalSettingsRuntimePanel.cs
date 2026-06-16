@@ -686,17 +686,21 @@ namespace Alzaki.GlobalSettings
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             try 
-            { 
+            {
+                // Use full path to avoid WoW64 file system redirection issues in 32-bit builds
+                string systemDir = Environment.GetFolderPath(Environment.SpecialFolder.System);
+                string oskPath = System.IO.Path.Combine(systemDir, "osk.exe");
+                
                 var startInfo = new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = "osk.exe",
+                    FileName = oskPath,
                     UseShellExecute = true
                 };
                 System.Diagnostics.Process.Start(startInfo); 
             } 
             catch (Exception e) 
             { 
-                Debug.LogWarning("[GlobalSettingsRuntimePanel] Failed to open virtual keyboard: " + e.Message); 
+                Debug.LogWarning("[GlobalSettingsRuntimePanel] Failed to open virtual keyboard: " + e.GetType().Name + " - " + e.Message); 
             }
 #else
             TouchScreenKeyboard.Open(input.text, TouchScreenKeyboardType.Default);

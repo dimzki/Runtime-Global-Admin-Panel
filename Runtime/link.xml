@@ -1,0 +1,7 @@
+<linker>
+  <!-- Preserve System.Diagnostics.Process for virtual keyboard (osk.exe) launching in IL2CPP builds -->
+  <assembly fullname="System" preserve="nothing">
+    <type fullname="System.Diagnostics.Process" preserve="all"/>
+    <type fullname="System.Diagnostics.ProcessStartInfo" preserve="all"/>
+  </assembly>
+</linker>
