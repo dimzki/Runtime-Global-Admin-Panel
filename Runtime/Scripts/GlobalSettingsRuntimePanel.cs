@@ -669,6 +669,13 @@ namespace Alzaki.GlobalSettings
             });
         }
 
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+        [System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+        private static extern IntPtr ShellExecute(IntPtr hwnd, string lpOperation, string lpFile, string lpParameters, string lpDirectory, int nShowCmd);
+
+        private const int SW_SHOWNORMAL = 1;
+#endif
+
         private async void OpenVirtualKeyboardAsync(InputField input)
         {
             // Wait until the user releases the mouse/touch to avoid interrupting the EventSystem's drag coroutine in TMP_InputField
@@ -687,37 +694,23 @@ namespace Alzaki.GlobalSettings
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             try 
             {
-                // Launch via cmd.exe to avoid IL2CPP's broken UseShellExecute implementation
-                var startInfo = new System.Diagnostics.ProcessStartInfo
+                // Use native Win32 ShellExecute via P/Invoke to bypass IL2CPP's broken Process.Start
+                IntPtr result = ShellExecute(IntPtr.Zero, "open", "osk.exe", null, null, SW_SHOWNORMAL);
+
+                // ShellExecute returns a value > 32 on success
+                if ((long)result <= 32)
                 {
-                    FileName = "cmd.exe",
-                    Arguments = "/c start osk.exe",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-                System.Diagnostics.Process.Start(startInfo); 
-            } 
-            catch (Exception e) 
-            { 
-                // Fallback: try the modern touch keyboard (tabtip.exe)
-                try
-                {
+                    // Fallback: try the modern touch keyboard
                     string tabtipPath = System.IO.Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles),
                         "Microsoft Shared", "ink", "TabTip.exe");
                     
-                    var fallbackInfo = new System.Diagnostics.ProcessStartInfo
-                    {
-                        FileName = tabtipPath,
-                        UseShellExecute = false
-                    };
-                    System.Diagnostics.Process.Start(fallbackInfo);
+                    ShellExecute(IntPtr.Zero, "open", tabtipPath, null, null, SW_SHOWNORMAL);
                 }
-                catch (Exception fallbackEx)
-                {
-                    Debug.LogWarning("[GlobalSettingsRuntimePanel] Failed to open virtual keyboard: " + e.GetType().Name + " - " + e.Message 
-                        + " | Fallback also failed: " + fallbackEx.GetType().Name + " - " + fallbackEx.Message);
-                }
+            } 
+            catch (Exception e) 
+            { 
+                Debug.LogWarning("[GlobalSettingsRuntimePanel] Failed to open virtual keyboard: " + e.GetType().Name + " - " + e.Message); 
             }
 #else
             TouchScreenKeyboard.Open(input.text, TouchScreenKeyboardType.Default);
