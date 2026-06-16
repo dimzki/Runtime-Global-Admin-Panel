@@ -577,13 +577,15 @@ namespace Alzaki.GlobalSettings
                     {
                         CreateSectionHeader(content, category.categoryName);
 
-                        foreach (var s in intList) { if (!string.IsNullOrEmpty(s.key)) { CreateIntField(content, s.key, s.value); totalFieldsAdded++; } }
-                        foreach (var s in floatList) { if (!string.IsNullOrEmpty(s.key)) { CreateFloatField(content, s.key, s.value); totalFieldsAdded++; } }
-                        foreach (var s in stringList) { if (!string.IsNullOrEmpty(s.key)) { CreateStringField(content, s.key, s.value); totalFieldsAdded++; } }
+                        bool useKb = _originalSettings.GetUseVirtualKeyboard();
+
+                        foreach (var s in intList) { if (!string.IsNullOrEmpty(s.key)) { CreateIntField(content, s.key, s.value, useKb); totalFieldsAdded++; } }
+                        foreach (var s in floatList) { if (!string.IsNullOrEmpty(s.key)) { CreateFloatField(content, s.key, s.value, useKb); totalFieldsAdded++; } }
+                        foreach (var s in stringList) { if (!string.IsNullOrEmpty(s.key)) { CreateStringField(content, s.key, s.value, useKb); totalFieldsAdded++; } }
                         foreach (var s in boolList) { if (!string.IsNullOrEmpty(s.key)) { CreateBoolField(content, s.key, s.value); totalFieldsAdded++; } }
                         foreach (var s in colorList) { if (!string.IsNullOrEmpty(s.key)) { CreateColorField(content, s.key, s.value); totalFieldsAdded++; } }
-                        foreach (var s in vector2List) { if (!string.IsNullOrEmpty(s.key)) { CreateVector2Field(content, s.key, s.value); totalFieldsAdded++; } }
-                        foreach (var s in vector3List) { if (!string.IsNullOrEmpty(s.key)) { CreateVector3Field(content, s.key, s.value); totalFieldsAdded++; } }
+                        foreach (var s in vector2List) { if (!string.IsNullOrEmpty(s.key)) { CreateVector2Field(content, s.key, s.value, useKb); totalFieldsAdded++; } }
+                        foreach (var s in vector3List) { if (!string.IsNullOrEmpty(s.key)) { CreateVector3Field(content, s.key, s.value, useKb); totalFieldsAdded++; } }
                         foreach (var s in enumList) { if (!string.IsNullOrEmpty(s.key)) { CreateEnumField(content, s); totalFieldsAdded++; } }
                     }
                 }
@@ -597,7 +599,7 @@ namespace Alzaki.GlobalSettings
             if (_originalSettings.GetHasPassword())
             {
                 CreateSectionHeader(content, "Security");
-                CreatePasswordFieldInPanel(content, "Admin Password", _originalSettings.GetPassword());
+                CreatePasswordFieldInPanel(content, "Admin Password", _originalSettings.GetPassword(), _originalSettings.GetUseVirtualKeyboard());
             }
         }
 
@@ -658,12 +660,25 @@ namespace Alzaki.GlobalSettings
             le.minHeight = 30;
         }
 
-        private void CreateIntField(Transform parent, string key, int value)
+        private void AttachVirtualKeyboardListener(InputField input)
+        {
+            input.onSelect.AddListener((str) =>
+            {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+                try { System.Diagnostics.Process.Start("osk.exe"); } catch (Exception e) { Debug.LogWarning("[GlobalSettingsRuntimePanel] Failed to open virtual keyboard: " + e.Message); }
+#else
+                TouchScreenKeyboard.Open(input.text, TouchScreenKeyboardType.Default);
+#endif
+            });
+        }
+
+        private void CreateIntField(Transform parent, string key, int value, bool useVirtualKeyboard = false)
         {
             GameObject field = CreateFieldRow(parent, key);
             InputField input = CreateInputField(field.transform);
             input.text = value.ToString();
             input.contentType = InputField.ContentType.IntegerNumber;
+            if (useVirtualKeyboard) AttachVirtualKeyboardListener(input);
 
             _intInputs[key] = input;
             _tempInts[key] = value;
@@ -675,12 +690,13 @@ namespace Alzaki.GlobalSettings
             });
         }
 
-        private void CreateFloatField(Transform parent, string key, float value)
+        private void CreateFloatField(Transform parent, string key, float value, bool useVirtualKeyboard = false)
         {
             GameObject field = CreateFieldRow(parent, key);
             InputField input = CreateInputField(field.transform);
             input.text = value.ToString();
             input.contentType = InputField.ContentType.DecimalNumber;
+            if (useVirtualKeyboard) AttachVirtualKeyboardListener(input);
 
             _floatInputs[key] = input;
             _tempFloats[key] = value;
@@ -692,12 +708,13 @@ namespace Alzaki.GlobalSettings
             });
         }
 
-        private void CreateStringField(Transform parent, string key, string value)
+        private void CreateStringField(Transform parent, string key, string value, bool useVirtualKeyboard = false)
         {
             GameObject field = CreateFieldRow(parent, key);
             InputField input = CreateInputField(field.transform);
             input.text = value;
             input.contentType = InputField.ContentType.Standard;
+            if (useVirtualKeyboard) AttachVirtualKeyboardListener(input);
 
             _stringInputs[key] = input;
             _tempStrings[key] = value;
@@ -708,12 +725,13 @@ namespace Alzaki.GlobalSettings
             });
         }
 
-        private void CreatePasswordFieldInPanel(Transform parent, string key, string value)
+        private void CreatePasswordFieldInPanel(Transform parent, string key, string value, bool useVirtualKeyboard = false)
         {
             GameObject field = CreateFieldRow(parent, key);
             InputField input = CreateInputField(field.transform);
             input.text = value;
             input.contentType = InputField.ContentType.IntegerNumber;
+            if (useVirtualKeyboard) AttachVirtualKeyboardListener(input);
 
             _tempAdminPassword = value;
 
@@ -810,17 +828,19 @@ namespace Alzaki.GlobalSettings
             img.raycastTarget = false; // Don't block button clicks
         }
 
-        private void CreateVector2Field(Transform parent, string key, Vector2 value)
+        private void CreateVector2Field(Transform parent, string key, Vector2 value, bool useVirtualKeyboard = false)
         {
             GameObject field = CreateFieldRow(parent, key);
 
             InputField inputX = CreateSmallInputField(field.transform, "X");
             inputX.text = value.x.ToString();
             inputX.contentType = InputField.ContentType.DecimalNumber;
+            if (useVirtualKeyboard) AttachVirtualKeyboardListener(inputX);
 
             InputField inputY = CreateSmallInputField(field.transform, "Y");
             inputY.text = value.y.ToString();
             inputY.contentType = InputField.ContentType.DecimalNumber;
+            if (useVirtualKeyboard) AttachVirtualKeyboardListener(inputY);
 
             _vector2XInputs[key] = inputX;
             _vector2YInputs[key] = inputY;
@@ -839,21 +859,24 @@ namespace Alzaki.GlobalSettings
             });
         }
 
-        private void CreateVector3Field(Transform parent, string key, Vector3 value)
+        private void CreateVector3Field(Transform parent, string key, Vector3 value, bool useVirtualKeyboard = false)
         {
             GameObject field = CreateFieldRow(parent, key);
 
             InputField inputX = CreateSmallInputField(field.transform, "X");
             inputX.text = value.x.ToString();
             inputX.contentType = InputField.ContentType.DecimalNumber;
+            if (useVirtualKeyboard) AttachVirtualKeyboardListener(inputX);
 
             InputField inputY = CreateSmallInputField(field.transform, "Y");
             inputY.text = value.y.ToString();
             inputY.contentType = InputField.ContentType.DecimalNumber;
+            if (useVirtualKeyboard) AttachVirtualKeyboardListener(inputY);
 
             InputField inputZ = CreateSmallInputField(field.transform, "Z");
             inputZ.text = value.z.ToString();
             inputZ.contentType = InputField.ContentType.DecimalNumber;
+            if (useVirtualKeyboard) AttachVirtualKeyboardListener(inputZ);
 
             _vector3XInputs[key] = inputX;
             _vector3YInputs[key] = inputY;

@@ -35,6 +35,10 @@ namespace Alzaki.GlobalSettings
                 
                 EditorGUI.indentLevel--;
             }
+            
+            EditorGUILayout.Space(5);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("useVirtualKeyboard"));
+            
             EditorGUILayout.Space(10);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("categories"), true);
             EditorGUILayout.Space(10);

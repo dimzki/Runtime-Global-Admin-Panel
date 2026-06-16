@@ -79,10 +79,12 @@ namespace Alzaki.GlobalSettings
     {
         [SerializeField] private bool HasPassword = false;
         [SerializeField] private string Password = "0000";
+        [SerializeField] private bool useVirtualKeyboard = false;
 
         public bool GetHasPassword() => HasPassword;
         public string GetPassword() => Password;
         public void SetPassword(string newPassword) => Password = newPassword;
+        public bool GetUseVirtualKeyboard() => useVirtualKeyboard;
 
         [SerializeField] public List<SettingsCategory> categories = new List<SettingsCategory>();
 
@@ -175,13 +177,14 @@ namespace Alzaki.GlobalSettings
         public T GetEnum<T>(string key, T defaultValue = default) where T : Enum { EnsureInitialized(); if (_enumDict.TryGetValue(key, out EnumSetting setting)) return setting.GetEnumValue<T>(); return defaultValue; }
         public void SetEnum<T>(string key, T value) where T : Enum { EnsureInitialized(); if (_enumDict.TryGetValue(key, out EnumSetting setting)) { setting.SetEnumValue(value); } else { var newSetting = new EnumSetting { key = key }; newSetting.SetEnumValue(value); _enumDict[key] = newSetting; } SyncEnumToList(key, value); }
         public bool HasEnum(string key) { EnsureInitialized(); return _enumDict.ContainsKey(key); }
-        
+
         public EnumSetting GetEnumSetting(string key) { EnsureInitialized(); return _enumDict.TryGetValue(key, out EnumSetting setting) ? setting : null; }
-        public void SetEnumSetting(EnumSetting setting) { 
-            if (setting == null || string.IsNullOrEmpty(setting.key)) return; 
-            EnsureInitialized(); 
-            if (_enumDict.TryGetValue(setting.key, out EnumSetting existing)) { existing.enumTypeName = setting.enumTypeName; existing.intValue = setting.intValue; } 
-            else { var newSetting = new EnumSetting { key = setting.key, enumTypeName = setting.enumTypeName, intValue = setting.intValue }; _enumDict[setting.key] = newSetting; SyncEnumSettingToList(newSetting); } 
+        public void SetEnumSetting(EnumSetting setting)
+        {
+            if (setting == null || string.IsNullOrEmpty(setting.key)) return;
+            EnsureInitialized();
+            if (_enumDict.TryGetValue(setting.key, out EnumSetting existing)) { existing.enumTypeName = setting.enumTypeName; existing.intValue = setting.intValue; }
+            else { var newSetting = new EnumSetting { key = setting.key, enumTypeName = setting.enumTypeName, intValue = setting.intValue }; _enumDict[setting.key] = newSetting; SyncEnumSettingToList(newSetting); }
         }
 
         public void ClearAll() { categories.Clear(); BuildDictionaries(); }
