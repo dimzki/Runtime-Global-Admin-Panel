@@ -58,10 +58,13 @@ namespace Alzaki.GlobalSettings
         }
 
         // ═════════════════════════════════════════════════════════════════════════════
-        // EVENTS
+        // EVENTS & EVENT FIRING
         // ═════════════════════════════════════════════════════════════════════════════
 
-        public static UnityEvent OnAdminPanelSaved = new UnityEvent();
+        public static UnityEvent OnCorrectPassword = new();
+        public static UnityEvent OnInvalidPassword = new();
+        public static UnityEvent OnAdminPanelSaved = new();
+        public static UnityEvent OnAdminPanelCancelled = new();
 
         // ═════════════════════════════════════════════════════════════════════════════
         // INITIALIZATION - RUNS BEFORE SCENE LOAD
@@ -283,7 +286,10 @@ namespace Alzaki.GlobalSettings
         private void OnDestroy()
         {
             _isQuitting = true;
+            OnCorrectPassword?.RemoveAllListeners();
+            OnInvalidPassword?.RemoveAllListeners();
             OnAdminPanelSaved?.RemoveAllListeners();
+            OnAdminPanelCancelled?.RemoveAllListeners();
         }
 
         // ═════════════════════════════════════════════════════════════════════════════

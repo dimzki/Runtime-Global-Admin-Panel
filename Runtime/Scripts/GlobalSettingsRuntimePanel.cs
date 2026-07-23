@@ -292,7 +292,7 @@ namespace Alzaki.GlobalSettings
                 Destroy(_panelRoot);
                 _panelRoot = null;
             }
-            
+
             _currentCategoryFilter = categoryName;
 
             if (_panelRoot == null)
@@ -305,7 +305,7 @@ namespace Alzaki.GlobalSettings
             {
                 if (_passwordOverlay == null)
                     CreatePasswordOverlay();
-                
+
                 _enteredPassword = "";
                 UpdatePasswordDisplay();
                 _passwordOverlay.SetActive(true);
@@ -685,14 +685,14 @@ namespace Alzaki.GlobalSettings
             }
 
             // Ensure the input is still selected before opening the keyboard
-            if (UnityEngine.EventSystems.EventSystem.current == null || 
+            if (UnityEngine.EventSystems.EventSystem.current == null ||
                 UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject != input.gameObject)
             {
                 return;
             }
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            try 
+            try
             {
                 // Use native Win32 ShellExecute via P/Invoke to bypass IL2CPP's broken Process.Start
                 IntPtr result = ShellExecute(IntPtr.Zero, "open", "osk.exe", null, null, SW_SHOWNORMAL);
@@ -704,13 +704,13 @@ namespace Alzaki.GlobalSettings
                     string tabtipPath = System.IO.Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles),
                         "Microsoft Shared", "ink", "TabTip.exe");
-                    
+
                     ShellExecute(IntPtr.Zero, "open", tabtipPath, null, null, SW_SHOWNORMAL);
                 }
-            } 
-            catch (Exception e) 
-            { 
-                Debug.LogWarning("[GlobalSettingsRuntimePanel] Failed to open virtual keyboard: " + e.GetType().Name + " - " + e.Message); 
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[GlobalSettingsRuntimePanel] Failed to open virtual keyboard: " + e.GetType().Name + " - " + e.Message);
             }
 #else
             TouchScreenKeyboard.Open(input.text, TouchScreenKeyboardType.Default);
@@ -1629,7 +1629,7 @@ namespace Alzaki.GlobalSettings
             CreateColorPickerHeader(pickerContent.transform);
 
             // Horizontal content area (preview on left, sliders on right)
-            GameObject contentRow = new GameObject("ContentRow", typeof (RectTransform));
+            GameObject contentRow = new GameObject("ContentRow", typeof(RectTransform));
             contentRow.transform.SetParent(pickerContent.transform, false);
             ((RectTransform)contentRow.transform).sizeDelta = new Vector2(570, 130);
 
@@ -1649,7 +1649,7 @@ namespace Alzaki.GlobalSettings
             CreateColorPickerPreview(contentRow.transform);
 
             // Right side: Sliders container
-            GameObject slidersContainer = new GameObject("Sliders", typeof (RectTransform));
+            GameObject slidersContainer = new GameObject("Sliders", typeof(RectTransform));
             slidersContainer.transform.SetParent(contentRow.transform, false);
             ((RectTransform)slidersContainer.transform).sizeDelta = new Vector2(260, 135);
 
@@ -1662,7 +1662,7 @@ namespace Alzaki.GlobalSettings
             LayoutElement slidersLe = slidersContainer.AddComponent<LayoutElement>();
             slidersLe.flexibleWidth = 1;
             slidersLe.preferredWidth = 260;
-            slidersLe.preferredHeight = 135;            
+            slidersLe.preferredHeight = 135;
 
             // RGB Sliders (compact)
             _redSlider = CreateColorSlider(slidersContainer.transform, "R", Color.red, out _redValueField);
@@ -1708,7 +1708,7 @@ namespace Alzaki.GlobalSettings
 
         private void CreateColorPickerPreview(Transform parent)
         {
-            var preview = new GameObject("Preview", typeof (RectTransform));
+            var preview = new GameObject("Preview", typeof(RectTransform));
             preview.transform.SetParent(parent, false);
 
             _colorPickerPreview = preview.AddComponent<Image>();
@@ -1759,9 +1759,9 @@ namespace Alzaki.GlobalSettings
             rowLe.minHeight = 30;
 
             // Label (R, G, B, A)
-            GameObject labelObj = new GameObject("Label", typeof (RectTransform));
+            GameObject labelObj = new GameObject("Label", typeof(RectTransform));
             labelObj.transform.SetParent(row.transform, false);
-            ((RectTransform)labelObj.transform).sizeDelta = new Vector2 (50, 16);
+            ((RectTransform)labelObj.transform).sizeDelta = new Vector2(50, 16);
 
 #if TMP_PRESENT
             TextMeshProUGUI labelText = labelObj.AddComponent<TextMeshProUGUI>();
@@ -1802,7 +1802,7 @@ namespace Alzaki.GlobalSettings
             GameObject bg = new GameObject("Background", typeof(RectTransform));
             bg.transform.SetParent(sliderObj.transform, false);
 
-            RectTransform bgRt = (RectTransform) bg.transform;
+            RectTransform bgRt = (RectTransform)bg.transform;
             bgRt.anchorMin = Vector2.zero;
             bgRt.anchorMax = Vector2.one;
             bgRt.sizeDelta = Vector2.zero;
@@ -1837,7 +1837,7 @@ namespace Alzaki.GlobalSettings
             GameObject handleArea = new GameObject("Handle Slide Area", typeof(RectTransform));
             handleArea.transform.SetParent(sliderObj.transform, false);
 
-            RectTransform handleAreaRt = (RectTransform) handleArea.transform;
+            RectTransform handleAreaRt = (RectTransform)handleArea.transform;
             handleAreaRt.anchorMin = Vector2.zero;
             handleAreaRt.anchorMax = Vector2.one;
             handleAreaRt.sizeDelta = new Vector2(-5, 0);  // Padding on sides
@@ -1846,7 +1846,7 @@ namespace Alzaki.GlobalSettings
             GameObject handle = new GameObject("Handle", typeof(RectTransform));
             handle.transform.SetParent(handleArea.transform, false);
 
-            RectTransform handleRt = (RectTransform) handle.transform;
+            RectTransform handleRt = (RectTransform)handle.transform;
             handleRt.sizeDelta = new Vector2(15, 0);  // Width 15, height matches slider
 
             Image handleImg = handle.AddComponent<Image>();
@@ -1856,9 +1856,9 @@ namespace Alzaki.GlobalSettings
             slider.targetGraphic = handleImg;
 
             // Value input field (0-255)
-            GameObject valueObj = new GameObject("Value", typeof (RectTransform));
+            GameObject valueObj = new GameObject("Value", typeof(RectTransform));
             valueObj.transform.SetParent(row.transform, false);
-            ((RectTransform)valueObj.transform).sizeDelta = new Vector2 (50, 25);
+            ((RectTransform)valueObj.transform).sizeDelta = new Vector2(50, 25);
 
             Image valueImg = valueObj.AddComponent<Image>();
             valueImg.color = new Color(0.15f, 0.15f, 0.15f, 1f);
@@ -1943,7 +1943,7 @@ namespace Alzaki.GlobalSettings
 
         private void CreateHexCodeField(Transform parent)
         {
-            GameObject hexRow = new GameObject("HexRow", typeof (RectTransform));
+            GameObject hexRow = new GameObject("HexRow", typeof(RectTransform));
             hexRow.transform.SetParent(parent, false);
 
             HorizontalLayoutGroup hlg = hexRow.AddComponent<HorizontalLayoutGroup>();
@@ -1951,8 +1951,8 @@ namespace Alzaki.GlobalSettings
             hlg.childControlWidth = false;
             hlg.childControlHeight = true;
             hlg.childForceExpandHeight = false;
-            hlg.padding.left   = 40;
-            hlg.padding.right   = 11;
+            hlg.padding.left = 40;
+            hlg.padding.right = 11;
 
 
             ((RectTransform)hlg.transform).sizeDelta = new Vector2(570, 30);
@@ -1986,7 +1986,7 @@ namespace Alzaki.GlobalSettings
             labelLe.preferredWidth = 200;
 
             // Input field
-            GameObject inputObj = new GameObject("HexInput", typeof (RectTransform));
+            GameObject inputObj = new GameObject("HexInput", typeof(RectTransform));
             inputObj.transform.SetParent(hexRow.transform, false);
             ((RectTransform)inputObj.transform).sizeDelta = new Vector2(150, 25);
 
@@ -2156,12 +2156,12 @@ namespace Alzaki.GlobalSettings
 
             Image inputBg = inputDisplayObj.AddComponent<Image>();
             inputBg.color = new Color(0.15f, 0.15f, 0.15f, 1f);
-            
+
             // outline
-            CreateBorderLine(inputDisplayObj.transform, "BorderTop", Color.gray, 1f, new Vector2(0,1), new Vector2(1,1), new Vector2(0,-1), Vector2.zero);
-            CreateBorderLine(inputDisplayObj.transform, "BorderBottom", Color.gray, 1f, new Vector2(0,0), new Vector2(1,0), Vector2.zero, new Vector2(0,1));
-            CreateBorderLine(inputDisplayObj.transform, "BorderLeft", Color.gray, 1f, new Vector2(0,0), new Vector2(0,1), Vector2.zero, new Vector2(1,0));
-            CreateBorderLine(inputDisplayObj.transform, "BorderRight", Color.gray, 1f, new Vector2(1,0), new Vector2(1,1), new Vector2(-1,0), Vector2.zero);
+            CreateBorderLine(inputDisplayObj.transform, "BorderTop", Color.gray, 1f, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -1), Vector2.zero);
+            CreateBorderLine(inputDisplayObj.transform, "BorderBottom", Color.gray, 1f, new Vector2(0, 0), new Vector2(1, 0), Vector2.zero, new Vector2(0, 1));
+            CreateBorderLine(inputDisplayObj.transform, "BorderLeft", Color.gray, 1f, new Vector2(0, 0), new Vector2(0, 1), Vector2.zero, new Vector2(1, 0));
+            CreateBorderLine(inputDisplayObj.transform, "BorderRight", Color.gray, 1f, new Vector2(1, 0), new Vector2(1, 1), new Vector2(-1, 0), Vector2.zero);
 
             GameObject textObj = new GameObject("Text", typeof(RectTransform));
             textObj.transform.SetParent(inputDisplayObj.transform, false);
@@ -2289,10 +2289,10 @@ namespace Alzaki.GlobalSettings
             Image img = btnObj.AddComponent<Image>();
             img.color = new Color(0.2f, 0.2f, 0.2f, 1f); // dark grey
 
-            CreateBorderLine(btnObj.transform, "BorderTop", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(0,1), new Vector2(1,1), new Vector2(0,-1), Vector2.zero);
-            CreateBorderLine(btnObj.transform, "BorderBottom", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(0,0), new Vector2(1,0), Vector2.zero, new Vector2(0,1));
-            CreateBorderLine(btnObj.transform, "BorderLeft", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(0,0), new Vector2(0,1), Vector2.zero, new Vector2(1,0));
-            CreateBorderLine(btnObj.transform, "BorderRight", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(1,0), new Vector2(1,1), new Vector2(-1,0), Vector2.zero);
+            CreateBorderLine(btnObj.transform, "BorderTop", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -1), Vector2.zero);
+            CreateBorderLine(btnObj.transform, "BorderBottom", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(0, 0), new Vector2(1, 0), Vector2.zero, new Vector2(0, 1));
+            CreateBorderLine(btnObj.transform, "BorderLeft", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(0, 0), new Vector2(0, 1), Vector2.zero, new Vector2(1, 0));
+            CreateBorderLine(btnObj.transform, "BorderRight", new Color(0.3f, 0.3f, 0.3f), 1f, new Vector2(1, 0), new Vector2(1, 1), new Vector2(-1, 0), Vector2.zero);
 
             Button btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
@@ -2364,11 +2364,14 @@ namespace Alzaki.GlobalSettings
             {
                 _passwordOverlay.SetActive(false);
                 LoadCurrentValues();
+                GlobalSettingsManager.OnCorrectPassword?.Invoke();
             }
             else
             {
                 _enteredPassword = "";
                 UpdatePasswordDisplay();
+                ShowPasswordError();
+                GlobalSettingsManager.OnInvalidPassword?.Invoke();
             }
         }
 
@@ -2527,6 +2530,7 @@ namespace Alzaki.GlobalSettings
         private void OnCancel()
         {
             Debug.Log("[GlobalSettingsRuntimePanel] Settings cancelled!");
+            GlobalSettingsManager.OnAdminPanelCancelled?.Invoke();
             Hide();
         }
     }
