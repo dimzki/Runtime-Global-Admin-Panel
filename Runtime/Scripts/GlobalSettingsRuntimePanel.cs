@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Threading.Tasks;
 #if TMP_PRESENT
 using TMPro;
@@ -663,10 +664,26 @@ namespace Alzaki.GlobalSettings
 
         private void AttachVirtualKeyboardListener(InputField input)
         {
+#if TMP_PRESENT
             input.onSelect.AddListener((str) =>
             {
                 OpenVirtualKeyboardAsync(input);
             });
+#else
+            EventTrigger trigger = input.gameObject.GetComponent<EventTrigger>();
+            if (trigger == null)
+            {
+                trigger = input.gameObject.AddComponent<EventTrigger>();
+            }
+
+            EventTrigger.Entry entry = new EventTrigger.Entry();
+            entry.eventID = EventTriggerType.Select;
+            entry.callback.AddListener((data) =>
+            {
+                OpenVirtualKeyboardAsync(input);
+            });
+            trigger.triggers.Add(entry);
+#endif
         }
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN

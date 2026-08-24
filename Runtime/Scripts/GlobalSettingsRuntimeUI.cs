@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+#if TMP_PRESENT
 using TMPro;
+#endif
 
 namespace Alzaki.GlobalSettings
 {
@@ -123,11 +125,19 @@ namespace Alzaki.GlobalSettings
             GameObject header = new GameObject("Header_" + text);
             header.transform.SetParent(contentParent, false);
 
+#if TMP_PRESENT
             TextMeshProUGUI textComponent = header.AddComponent<TextMeshProUGUI>();
             textComponent.text = text;
             textComponent.fontSize = 24;
             textComponent.fontStyle = FontStyles.Bold;
             textComponent.color = Color.white;
+#else
+            Text textComponent = header.AddComponent<Text>();
+            textComponent.text = text;
+            textComponent.fontSize = 24;
+            textComponent.fontStyle = FontStyle.Bold;
+            textComponent.color = Color.white;
+#endif
 
             LayoutElement layoutElement = header.AddComponent<LayoutElement>();
             layoutElement.minHeight = 40;
