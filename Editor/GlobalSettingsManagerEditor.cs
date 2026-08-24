@@ -5,7 +5,6 @@ using System.Collections.Generic;
 
 namespace Alzaki.GlobalSettings
 {
-#if !ODIN_INSPECTOR
     [CustomEditor(typeof(GlobalSettingsManager), true)]
     public class GlobalSettingsManagerEditor : Editor
     {
@@ -94,5 +93,4 @@ namespace Alzaki.GlobalSettings
             }
         }
     }
-#endif
 }
